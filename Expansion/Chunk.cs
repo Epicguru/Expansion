@@ -31,7 +31,7 @@ namespace Expansion
             Relocate(x, y);
 
             tiles = new Tile[SIZE * SIZE];
-            RT = new RenderTarget2D(JEngine.MainGraphicsDevice, SIZE * Tile.SIZE, SIZE * Tile.SIZE);
+            RT = new RenderTarget2D(JEngine.MainGraphicsDevice, SIZE * Tile.SIZE, SIZE * Tile.SIZE, false, SurfaceFormat.Color, DepthFormat.None);
             RT.Name = "Chunk Render Target";
             TotalCount++;
         }
@@ -123,26 +123,40 @@ namespace Expansion
                     n *= 0.5f;
                     n += 0.5f;
 
+                    bool tree = false;
                     Color c = Color.Blue;
                     if (n > 0.9f)
-                        c = Color.NavajoWhite;
+                    {
+                        c = Color.GhostWhite;
+                    }
                     else if (n > 0.8f)
+                    {
                         c = Color.DarkSlateGray;
+                    }
                     else if (n > 0.65f)
+                    {
                         c = Color.DimGray;
+                    }
                     else if (n > 0.5f)
+                    {
                         c = Color.LawnGreen;
+                        tree = Engine.Random.Chance(0.2f);
+                    }
                     else if (n > 0.25f)
+                    {
                         c = Color.SandyBrown;
+                    }
                     else if (n > 0.2f)
+                    {
                         c = Color.Yellow;
+                    }
 
                     if (n > max)
                         max = n;
                     if (n < min)
                         min = n;
 
-                    tiles[x + y * SIZE] = new Tile(1, ColorCache.EnsureColor(c));
+                    tiles[x + y * SIZE] = new Tile(1, ColorCache.EnsureColor(c)) { HasTree = tree };
                 }
             }
 

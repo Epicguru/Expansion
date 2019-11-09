@@ -34,6 +34,8 @@ namespace Engine.Sprites
         }
 
         private Rectangle _bounds;
+        public int Width { get { return Bounds.Width; } }
+        public int Height { get { return Bounds.Height; } }
 
         public Sprite(string name, Texture2D texture, Rectangle bounds)
         {

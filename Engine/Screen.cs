@@ -1,4 +1,6 @@
-﻿namespace Engine
+﻿using Microsoft.Xna.Framework;
+
+namespace Engine
 {
     public static class Screen
     {
@@ -61,6 +63,32 @@
             {
                 Loop.VSyncMode = value;
             }
+        }
+
+        private static int oldW, oldH;
+        private static Point oldPos;
+        public static void ToggleFullscreen()
+        {
+            JEngine.AddAction(() =>
+            {
+                if (!JEngine.GraphicsDeviceManager.IsFullScreen)
+                {
+                    oldW = Width;
+                    oldH = Height;
+                    oldPos = JEngine.GameWindow.Position;
+                    JEngine.GraphicsDeviceManager.PreferredBackBufferWidth = MonitorWidth;
+                    JEngine.GraphicsDeviceManager.PreferredBackBufferHeight = MonitorHeight;
+                }
+                else
+                {
+                    JEngine.GraphicsDeviceManager.PreferredBackBufferWidth = oldW;
+                    JEngine.GraphicsDeviceManager.PreferredBackBufferHeight = oldH;
+                    JEngine.GameWindow.Position = oldPos;
+                }
+
+                JEngine.GraphicsDeviceManager.ApplyChanges();
+                JEngine.GraphicsDeviceManager.ToggleFullScreen();
+            });
         }
 
         /// <summary>

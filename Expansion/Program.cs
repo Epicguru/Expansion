@@ -37,7 +37,7 @@ namespace Expansion
     {
         public const float CHUNK_UNLOAD_TIME = 0.1f;
 
-        private Sprite TreeLines, TreeColor;
+        internal static Sprite TreeLines, TreeColor;
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
         private TileLayer Layer;
@@ -65,6 +65,11 @@ namespace Expansion
         private List<long> toBin = new List<long>();
         public override void Update()
         {
+            if (Input.KeyDown(Keys.F11))
+            {
+                Screen.ToggleFullscreen();
+            }
+
             if (Input.KeyPressed(Keys.C))
                 return;
 
@@ -119,12 +124,26 @@ namespace Expansion
             int maxX = minX + (int)Math.Ceiling((float)JEngine.Camera.WorldViewBounds.Width / (Tile.SIZE * Chunk.SIZE)) + PADDING * 2;
             int maxY = minY + (int)Math.Ceiling((float)JEngine.Camera.WorldViewBounds.Width / (Tile.SIZE * Chunk.SIZE)) + PADDING * 2;
 
+            // Debug texts.
             Debug.Text($"Chunk Bounds: {minX}->{maxX}, {minY}->{maxY}.");
             Debug.Text($"Cam pos: {JEngine.Camera.Position}");
             Debug.Text($"Chunks in memory: {Chunk.TotalCount}");
             long bytesPerChunk = Chunk.SIZE * Chunk.SIZE * Tile.SIZE * Tile.SIZE;
             long totalBytes = Chunk.TotalCount * bytesPerChunk;
             Debug.Text($"EST. Chunk video mem: {totalBytes / (1024 * 256)} MB.");
+
+            int count = 0;
+            foreach (var item in GraphicsAdapter.Adapters)
+            {
+                Debug.Text($"-- Graphics Adapter {count}: {item.DeviceName.ToLower()} {(item.IsDefaultAdapter ? "[Default]" : "")} --");
+                count++;
+
+                Debug.Text($"[{item.DeviceId}]: {item.Description}");
+                Debug.Text($"Curernt display mode: {item.CurrentDisplayMode.Width}x{item.CurrentDisplayMode.Height}, {item.CurrentDisplayMode.Format}");
+                Debug.Text($"Widescreen? {item.IsWideScreen}");
+                Debug.Text($"Vendor ID: {item.VendorId}");
+            }
+
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)
