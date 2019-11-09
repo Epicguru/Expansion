@@ -19,7 +19,7 @@ namespace Engine.Loaders
                 error = null;
                 try
                 {
-                    return Engine.XNAContent.Load<Texture2D>(path);
+                    return JEngine.XNAContent.Load<Texture2D>(path);
                 }
                 catch(Exception e)
                 {
@@ -36,7 +36,7 @@ namespace Engine.Loaders
                 {
                     using (var fs = new FileStream(path, FileMode.Open))
                     {
-                        return Texture2D.FromStream(Engine.MainGraphicsDevice, fs);
+                        return Texture2D.FromStream(JEngine.MainGraphicsDevice, fs);
                     }
                 }
                 catch (Exception e)

@@ -1,4 +1,7 @@
 ﻿using Engine.IO;
+using Engine.Screens;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +23,7 @@ namespace Engine
         public static bool LogPrintTime { get; set; } = false;
         public static string LogFilePath { get; private set; }
 
+        internal static readonly List<string> DebugTexts = new List<string>();
         private static StringBuilder StringBuilder = new StringBuilder();
         private static StringBuilder TextBuilder = new StringBuilder();
         private static List<string> LogEntries = new List<string>();
@@ -27,6 +31,11 @@ namespace Engine
         private static readonly object Key = new object();
         private static Dictionary<string, System.Diagnostics.Stopwatch> Timers = new Dictionary<string, System.Diagnostics.Stopwatch>();
         private static Queue<System.Diagnostics.Stopwatch> TimerPool = new Queue<System.Diagnostics.Stopwatch>();
+        private static List<string> TimerNames = new List<string>();
+        private static List<(DrawInstruction, object[] args)> toDraw = new List<(DrawInstruction, object[] args)>();
+        private static List<(DrawInstruction, object[] args)> toDrawUI = new List<(DrawInstruction, object[] args)>();
+
+        public delegate void DrawInstruction(SpriteBatch spr, object[] args);
 
         public static void Init()
         {
@@ -95,14 +104,38 @@ namespace Engine
 
         public static TimeSpan StopTimer(string key, bool log = false)
         {
+            TimeSpan s = StopInternal(key, log, out bool stopped);
+            if (stopped)
+            {
+                TimerNames.Remove(key);
+            }
+            return s;
+        }
+
+        public static TimeSpan StopTimer(bool log = false)
+        {
+            string name = TimerNames.Count == 0 ? null : TimerNames[TimerNames.Count - 1];
+            if (TimerNames.Count != 0)
+                TimerNames.RemoveAt(TimerNames.Count - 1);
+
+            if (name == null)
+                Warn("No timers are currently running, cannot stop.");
+
+            return StopInternal(name, log, out bool stopped);
+        }
+
+        private static TimeSpan StopInternal(string key, bool log, out bool didStop)
+        {
             if (string.IsNullOrEmpty(key))
             {
+                didStop = false;
                 return TimeSpan.Zero;
             }
 
             if (!Timers.ContainsKey(key))
             {
                 Warn($"Did not find timer for key '{key}'. Returning zero time span.");
+                didStop = false;
                 return TimeSpan.Zero;
             }
 
@@ -115,6 +148,7 @@ namespace Engine
                 Trace($"{key}: {sw.Elapsed.TotalMilliseconds:F2} ms");
             }
 
+            didStop = true;
             return sw.Elapsed;
         }
 
@@ -128,7 +162,121 @@ namespace Engine
 
         public static void Text(string s)
         {
-            // TODO implement me
+            if(s != null)
+                DebugTexts.Add(s);
+        }
+
+        public static void TextAt(string text, Vector2 position, Color color)
+        {
+            if (Loop.InUIDraw)
+            {
+                toDrawUI.Add((DrawText, new object[] { text, position, color }));
+            }
+            else
+            {
+                toDraw.Add((DrawText, new object[] { text, position, color }));
+            }
+        }
+
+        private static void DrawText(SpriteBatch spr, object[] args)
+        {
+            spr.DrawString(LoadingScreen.font, (string)args[0], (Vector2)args[1], (Color)args[2]);
+        }
+
+        public static void Box(Rectangle position, Color color)
+        {
+            if (Loop.InUIDraw)
+            {
+                toDrawUI.Add((DrawRect, new object[] { position, color }));
+            }
+            else
+            {
+                toDraw.Add((DrawRect, new object[] { position, color }));
+            }
+        }
+
+        private static void DrawRect(SpriteBatch spr, object[] args)
+        {
+            Rectangle bounds = (Rectangle)args[0];
+            Color c = (Color)args[1];
+
+            spr.Draw(JEngine.Pixel, bounds, c);
+        }
+
+        internal static void Update()
+        {
+            DebugTexts.Clear();
+        }
+
+        internal static void Draw(SpriteBatch spr)
+        {
+            if (!JEngine.ScreenManager.GetScreen<DebugDisplayScreen>().Visible)
+                return;
+
+            // Draw all stuff that is pending.
+            while (toDrawUI.Count > 0)
+            {
+                (var method, object[] args) = toDraw[0];
+                toDraw.RemoveAt(0);
+
+                method.Invoke(spr, args);
+            }
+        }
+
+        internal static void DrawUI(SpriteBatch spr)
+        {
+            if (!JEngine.ScreenManager.GetScreen<DebugDisplayScreen>().Visible)
+                return;
+
+            double total = Loop.Statistics.FrameTotalTime;
+            double update = Loop.Statistics.FrameUpdateTime;
+            double draw = Loop.Statistics.FrameDrawTime;
+            double present = Loop.Statistics.FramePresentingTime;
+            double sleep = Loop.Statistics.FrameSleepTime;
+            double other = total - (update + draw + present + sleep);
+
+            bool waited = Loop.Statistics.Waited;
+            if (total == 0.0)
+                total = 0.1;
+
+            int i = 0;
+            DrawPart(i++, "Update", update, total, Color.Violet);
+            DrawPart(i++, "Draw", draw, total, Color.LightSeaGreen);
+            DrawPart(i++, "Present", present, total, Color.IndianRed);
+            DrawPart(i++, $"Sleep ({(waited ? 'Y' : 'N')})", sleep, total, Color.Khaki);
+            DrawPart(i++, "Other", other, total, Color.Beige);
+
+            // Draw all UI stuff that is pending.
+            while(toDrawUI.Count > 0)
+            {
+                (var method, object[] args) = toDrawUI[0];
+                toDrawUI.RemoveAt(0);
+
+                method.Invoke(spr, args);
+            }
+        }
+
+        private static StringBuilder str = new StringBuilder();
+        private static void DrawPart(int index, string name, double time, double total, Color c)
+        {
+            const int WIDTH = 200;
+            const int HEIGHT = 24;
+            int x = Screen.Width - WIDTH - 5;
+            int y = 5 + index * (HEIGHT + 2);
+
+            double p = time / total;
+
+            str.Clear();
+            str.Append(name);
+            str.Append(" [");
+            str.Append((time * 1000).ToString("F1"));
+            str.Append("ms, ");
+            str.Append((p * 100.0).ToString("F1"));
+            str.Append("%]");
+
+            Debug.Box(new Rectangle(x, y, WIDTH, HEIGHT), Color.DimGray);
+            Debug.Box(new Rectangle(x, y, (int)Math.Round(p * WIDTH), HEIGHT), c);
+            Debug.TextAt(str.ToString(), new Vector2(x + 3, y + 2), Color.Black);
         }
 
         #region Logging
@@ -195,8 +343,8 @@ namespace Engine
             if (LogPrintTime)
                 TextBuilder.Append(time);
 
-            TextBuilder.Append(text ?? "null");
-            StringBuilder.Append(text ?? "null");
+            TextBuilder.Append(text ?? "<null>");
+            StringBuilder.Append(text ?? "<null>");
 
             if(LogStackTraceDepth != 0)
             {

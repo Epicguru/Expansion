@@ -10,6 +10,7 @@ namespace Engine.Screens
     public class ScreenManager : IDisposable
     {
         private readonly List<GameScreen> allScreens = new List<GameScreen>();
+        private readonly Dictionary<Type, GameScreen> mappedScreens = new Dictionary<Type, GameScreen>();
 
         public GameScreen GetScreen(ushort id)
         {
@@ -20,6 +21,18 @@ namespace Engine.Screens
                 return null;
 
             return allScreens[id - 1];
+        }
+
+        public T GetScreen<T>() where T : GameScreen
+        {
+            if (mappedScreens.ContainsKey(typeof(T)))
+            {
+                return mappedScreens[typeof(T)] as T;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public GameScreen RegisterNew(GameScreen scr)
@@ -39,6 +52,11 @@ namespace Engine.Screens
             allScreens.Add(scr);
             scr.ID = (ushort)allScreens.Count;
             Debug.Log($"Registered new screen {scr.Name} under ID {scr.ID}.");
+
+            if (!mappedScreens.ContainsKey(scr.GetType()))
+            {
+                mappedScreens.Add(scr.GetType(), scr);
+            }
 
             return scr;
         }

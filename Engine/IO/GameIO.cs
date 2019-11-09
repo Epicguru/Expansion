@@ -5,7 +5,7 @@ namespace Engine.IO
 {
     public static class GameIO
     {
-        public static readonly string GameDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", Engine.GameName);
+        public static readonly string GameDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "My Games", JEngine.GameName);
         public static readonly string LogDirectory = Path.Combine(GameDirectory, "Logs");
 
         /// <summary>

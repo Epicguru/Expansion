@@ -19,9 +19,15 @@ namespace Engine
                 this._zoom = Math.Max(Math.Min(value, 10), 0.005f);
             }
         }
+        /// <summary>
+        /// The current in-game camera bounds, measured in pixels.
+        /// Use this to perform culling.
+        /// </summary>
         public Rectangle WorldViewBounds { get; private set; }
-        public Rectangle WorldTileBounds { get; private set; }
-        public Rectangle WorldChunkBounds { get; private set; }
+        /// <summary>
+        /// When true, the <see cref="WorldViewBounds"/> is updated every frame, otherwise will not be updated.
+        /// Default is true.
+        /// </summary>
         public bool UpdateViewBounds { get; set; } = true;
 
         private float _zoom = 1f;
@@ -51,20 +57,15 @@ namespace Engine
             r.Width = (int)Math.Ceiling(bottomRight.X - topLeft.X);
             r.Height = (int)Math.Ceiling(bottomRight.Y - topLeft.Y);
             WorldViewBounds = r;
-
-            var tb = WorldTileBounds;
-            tb.X = PixelToTile(r.X);
-            tb.Y = PixelToTile(r.Y);
-            tb.Width = PixelToTile(r.Right) - tb.X + 1;
-            tb.Height = PixelToTile(r.Bottom) - tb.Y + 1;
-            WorldTileBounds = tb;
         }
 
-        public int PixelToTile(int pixelCoord)
-        {
-            return (int)Math.Floor((double)pixelCoord / 16);
-        }
-
+        /// <summary>
+        /// Converts a screen-space position to a world-space position.
+        /// 
+        /// If you are looking for the world mouse position, you should use <see cref="Input.MouseWorldPos"/>.
+        /// </summary>
+        /// <param name="screenPos">The screen space position.</param>
+        /// <returns>The world space position corresponding to the screen space one.</returns>
         public Vector2 ScreenToWorldPosition(Vector2 screenPos)
         {
             return Vector2.Transform(screenPos, _inverted);

@@ -1,4 +1,5 @@
 ﻿
+using Engine.Packer;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,8 @@ namespace Engine
     /// </summary>
     public class Content : IDisposable
     {
+        public FixedSizeSpritePacker SpritePacker;
+
         private readonly Dictionary<Type, ContentLoader> loaders = new Dictionary<Type, ContentLoader>();
         private Stopwatch watch = new Stopwatch();
 
@@ -32,6 +35,7 @@ namespace Engine
             }
 
             loaders.Add(loader.TargetType, loader);
+            loader.Content = this;
         }
 
         /// <summary>
@@ -59,7 +63,7 @@ namespace Engine
             else
             {
                 Debug.Error($"Failed to find content loader for type: {typeof(T).FullName} (trying to load '{path}').");
-                return default(T);
+                return default;
             }
         }
 
@@ -78,6 +82,10 @@ namespace Engine
 
         public void Dispose()
         {
+            foreach (var pair in loaders)
+            {
+                pair.Value.Content = null;
+            }
             loaders.Clear();
         }        
     }

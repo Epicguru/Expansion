@@ -17,7 +17,7 @@ namespace Engine.Loaders
             if(args == null || args.Length == 0)
             {
                 // Load internally.
-                return Engine.XNAContent.Load<SpriteFont>(path);
+                return JEngine.XNAContent.Load<SpriteFont>(path);
             }
             else
             {

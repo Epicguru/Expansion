@@ -9,7 +9,7 @@
         {
             get
             {
-                return Engine.MainGraphicsDevice.PresentationParameters.BackBufferWidth;
+                return JEngine.MainGraphicsDevice.PresentationParameters.BackBufferWidth;
             }
         }
 
@@ -20,7 +20,7 @@
         {
             get
             {
-                return Engine.MainGraphicsDevice.PresentationParameters.BackBufferHeight;
+                return JEngine.MainGraphicsDevice.PresentationParameters.BackBufferHeight;
             }
         }
 
@@ -32,7 +32,7 @@
         {
             get
             {
-                return Engine.MainGraphicsDevice.DisplayMode.Width;
+                return JEngine.MainGraphicsDevice.DisplayMode.Width;
             }
         }
 
@@ -44,7 +44,7 @@
         {
             get
             {
-                return Engine.MainGraphicsDevice.DisplayMode.Height;
+                return JEngine.MainGraphicsDevice.DisplayMode.Height;
             }
         }
 

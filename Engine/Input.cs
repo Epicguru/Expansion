@@ -40,7 +40,7 @@ namespace Engine
             CurrentMouseState = Mouse.GetState();
 
             MousePos = CurrentMouseState.Position;
-            MouseWorldPos = Engine.Camera.ScreenToWorldPosition(MousePos.ToVector2());
+            MouseWorldPos = JEngine.Camera.ScreenToWorldPosition(MousePos.ToVector2());
             MouseInWindow = Screen.Contains((int)MousePos.X, (int)MousePos.Y);
 
             MouseScrollDelta = CurrentMouseState.ScrollWheelValue - MouseScroll;

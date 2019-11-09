@@ -5,6 +5,7 @@ namespace Engine
     public abstract class ContentLoader
     {
         public readonly Type TargetType;
+        public Content Content { get; internal set; }
 
         public ContentLoader(Type type)
         {

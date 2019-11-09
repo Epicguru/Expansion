@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.GUI;
+using Engine.Screens;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
@@ -50,8 +52,9 @@ namespace Engine
         /// <summary>
         /// If true, then framerate is limited and maintained using a more accurate technique, leading to more
         /// consistent framerates. However, this can be harder on the CPU, leaving less time for other apps.
+        /// Default to off (false).
         /// </summary>
-        public static bool EnablePrecsionFramerate { get; set; } = true;
+        public static bool EnablePrecsionFramerate { get; set; } = false;
 
         /// <summary>
         /// Gets or sets the wait time, in milliseconds, that the precision framerate mode uses. <see cref="EnablePrecsionFramerate"/>.
@@ -88,13 +91,13 @@ namespace Engine
                 switch (value)
                 {
                     case VSyncMode.DISABLED:
-                        Engine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Immediate;
+                        JEngine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Immediate;
                         break;
                     case VSyncMode.ENABLED:
-                        Engine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.One;
+                        JEngine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.One;
                         break;
                     case VSyncMode.DOUBLE:
-                        Engine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Two;
+                        JEngine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Two;
                         break;
                 }
 
@@ -114,6 +117,7 @@ namespace Engine
             public double FrameSleepTime;
             public double FramePresentingTime;
             public bool Waited;
+            public int RenderTargetDraws;
             public GraphicsMetrics DrawMetrics { get; internal set; }
         }
         public static Stats Statistics { get; private set; } = new Stats();
@@ -137,8 +141,6 @@ namespace Engine
 
             Running = true;
             ThreadQuit = false;
-
-            VSyncMode = VSyncMode.ENABLED;
 
             Thread = new Thread(Run);
             Thread.Name = "Game Loop";
@@ -172,7 +174,7 @@ namespace Engine
             Begin();
 
             Debug.Trace("Starting game loop...");
-            SpriteBatch spr = Engine.MainSpriteBatch;
+            SpriteBatch spr = JEngine.MainSpriteBatch;
             Stopwatch watch = new Stopwatch();
             Stopwatch watch2 = new Stopwatch();
             Stopwatch watch3 = new Stopwatch();
@@ -274,48 +276,57 @@ namespace Engine
             }
 
             Input.StartFrame();
+            Debug.Update();
 
             Debug.Text($"FPS: {Framerate:F0} (Target: {(TargetFramerate == 0 ? "uncapped" : TargetFramerate.ToString("F0"))}, VSync: {VSyncMode})");
-            Debug.Text($"Time Scale: {Time.TimeScale}, DT: {Time.deltaTime}");
+            Debug.Text($"Time Scale: {Time.TimeScale}");
             Debug.Text($"Screen Res: ({Screen.Width}x{Screen.Height})");
             Debug.Text($"Texture Swap Count: {Loop.Statistics.DrawMetrics.TextureCount}");
             Debug.Text($"Draw Calls: {Loop.Statistics.DrawMetrics.DrawCount}");
-            Debug.Text($"Sprites Drawn: {Loop.Statistics.DrawMetrics.SpriteCount}");           
+            Debug.Text($"Sprites Drawn: {Loop.Statistics.DrawMetrics.SpriteCount}");
+            Debug.Text($"Render Target Draw Count: {Loop.Statistics.RenderTargetDraws}");           
 
             if (Input.KeyDown(Keys.E))
-                Engine.Camera.UpdateViewBounds = !Engine.Camera.UpdateViewBounds;
+                JEngine.Camera.UpdateViewBounds = !JEngine.Camera.UpdateViewBounds;
 
             // Update currently active screen.
-            Engine.EngineUpdate();
+            JEngine.EngineUpdate();
         }
 
         private static void Draw(SpriteBatch spr)
         {
-            Engine.Camera.UpdateMatrix(Engine.MainGraphicsDevice);
-            Engine.MainGraphicsDevice.Clear(Engine.BackgroundColor);
+            JEngine.Camera.UpdateMatrix(JEngine.MainGraphicsDevice);
+            JEngine.MainGraphicsDevice.SetRenderTarget(null);
+            JEngine.MainGraphicsDevice.Clear(JEngine.BackgroundColor);
 
-            SamplerState s = Engine.Camera.Zoom >= 1 ? SamplerState.PointClamp : SamplerState.LinearClamp;
-            spr.Begin(SpriteSortMode.Deferred, null, s, null, null, null, Engine.Camera.GetMatrix());
+            SamplerState s = JEngine.Camera.Zoom > 1 ? SamplerState.PointClamp : SamplerState.LinearClamp;
+            spr.Begin(SpriteSortMode.Deferred, null, s, null, null, null, JEngine.Camera.GetMatrix());
 
             // Draw the world.
-            Engine.EngineDraw();
+            JEngine.EngineDraw();
+            Debug.Draw(spr);
 
             spr.End();
 
             InUIDraw = true;
-            spr.Begin(SpriteSortMode.Deferred, null, null, null, null, null, null);
+            spr.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp, null, null, null, null);
 
             // Draw the UI.
-            Engine.EngineDrawUI();
+            UILayout.FrameReset();
+            JEngine.EngineDrawUI();
+            Debug.DrawUI(spr);
 
             spr.End();
             InUIDraw = false;
+
+            Statistics.RenderTargetDraws = GameScreen.RTDrawCount;
+            GameScreen.RTDrawCount = 0;
         }
 
         private static void Present()
         {
-            Statistics.DrawMetrics = Engine.MainGraphicsDevice.Metrics;
-            Engine.MainGraphicsDevice.Present();
+            Statistics.DrawMetrics = JEngine.MainGraphicsDevice.Metrics;
+            JEngine.MainGraphicsDevice.Present();
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -7,13 +7,14 @@
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5548ACF7-1B3C-4FC2-86CA-3A4C33851560}</ProjectGuid>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Engine</RootNamespace>
     <AssemblyName>Engine</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <MonoGamePlatform>Windows</MonoGamePlatform>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -24,6 +25,7 @@
     <DefineConstants>DEBUG;TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -33,41 +35,57 @@
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
   </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Camera.cs" />
     <Compile Include="Content.cs" />
     <Compile Include="ContentLoader.cs" />
     <Compile Include="Debug.cs" />
-    <Compile Include="Engine.cs" />
+    <Compile Include="JEngine.cs" />
+    <Compile Include="GUI\UIFlow.cs" />
+    <Compile Include="GUI\UILayout.cs" />
+    <Compile Include="GUI\UIOptions.cs" />
+    <Compile Include="GUI\UIStack.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="IO\GameIO.cs" />
     <Compile Include="Loaders\FontLoader.cs" />
+    <Compile Include="Loaders\SpriteLoader.cs" />
     <Compile Include="Loaders\TextureLoader.cs" />
     <Compile Include="Loop.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="MathUtils\Noise.cs" />
+    <Compile Include="Packer\SpriteAtlas.cs" />
+    <Compile Include="Packer\FixedSizeSpritePacker.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SBExtensions.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="Random.cs" />
     <Compile Include="Screen.cs" />
+    <Compile Include="Screens\DebugDisplayScreen.cs" />
     <Compile Include="Screens\GameScreen.cs" />
     <Compile Include="Screens\LoadingScreen.cs" />
     <Compile Include="Screens\ScreenManager.cs" />
-    <Compile Include="Screens\TestScreen.cs" />
+    <Compile Include="Screens\CameraMoveScreen.cs" />
     <Compile Include="Sprites\NinePatch.cs" />
     <Compile Include="Sprites\Sprite.cs" />
+    <Compile Include="Sprites\SpriteException.cs" />
     <Compile Include="Time.cs" />
-    <Compile Include="UI\UI.cs" />
+    <Compile Include="GUI\UI.cs" />
     <Compile Include="VSyncMode.cs" />
+    <Compile Include="MathUtils\WaveUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">
       <HintPath>$(MonoGameInstallDirectory)\MonoGame\v3.0\Assemblies\Windows\MonoGame.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="SharpNoise, Version=0.12.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SharpNoise.0.12.0\lib\netstandard2.0\SharpNoise.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
@@ -77,7 +95,9 @@
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
+    <None Include="app.config" />
     <None Include="app.manifest" />
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />

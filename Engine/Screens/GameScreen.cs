@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 
 namespace Engine.Screens
 {
@@ -10,6 +11,8 @@ namespace Engine.Screens
     /// </summary>
     public abstract class GameScreen
     {
+        internal static int RTDrawCount = 0;
+
         public string Name { get; protected set; }
         /// <summary>
         /// Gets or sets the active state of this screen. When a screen is not active, it is not updated or
@@ -31,6 +34,7 @@ namespace Engine.Screens
 
         internal bool targetActive = false;
         internal bool realActive = false;
+        internal List<TargetRenderRequest> renderTargetsToDraw = new List<TargetRenderRequest>();
 
         public GameScreen(string name)
         {
@@ -75,8 +79,83 @@ namespace Engine.Screens
 
         internal void InternalDraw(SpriteBatch spr)
         {
+            spr.DrawString(Engine.Screens.LoadingScreen.font, "Yeet", new Vector2(200, 100), Color.White);
+
+            for (int i = 0; i < renderTargetsToDraw.Count; i++)
+            {
+                var request = renderTargetsToDraw[i];
+
+                if (request.IsPreDraw)
+                {
+                    renderTargetsToDraw.RemoveAt(i);
+                    i--;
+
+                    spr.End();
+                    Debug.Assert(request.RenderTarget != null, "Render target should not be null at this point.");
+                    JEngine.MainGraphicsDevice.SetRenderTarget(request.RenderTarget);
+                    spr.Begin(request.SortMode);
+                    this.DrawRenderTarget(request, spr);
+                    spr.End();
+                    JEngine.MainGraphicsDevice.SetRenderTarget(null);
+                    SamplerState s = JEngine.Camera.Zoom > 1 ? SamplerState.PointClamp : SamplerState.LinearClamp;
+                    spr.Begin(SpriteSortMode.Deferred, null, s, null, null, null, JEngine.Camera.GetMatrix());
+
+                    RTDrawCount++;
+                }
+            }
+
             if(Active && Visible)
                 this.Draw(spr);
+
+            for (int i = 0; i < renderTargetsToDraw.Count; i++)
+            {
+                var request = renderTargetsToDraw[i];
+
+                if (!request.IsPreDraw)
+                {
+                    renderTargetsToDraw.RemoveAt(i);
+                    i--;
+
+                    spr.End();
+                    JEngine.MainGraphicsDevice.SetRenderTarget(request.RenderTarget);
+                    spr.Begin(request.SortMode);
+                    this.DrawRenderTarget(request, spr);
+                    spr.End();
+                    JEngine.MainGraphicsDevice.SetRenderTarget(null);
+                    SamplerState s = JEngine.Camera.Zoom > 1 ? SamplerState.PointClamp : SamplerState.LinearClamp;
+                    spr.Begin(SpriteSortMode.Deferred, null, s, null, null, null, JEngine.Camera.GetMatrix());
+
+                    RTDrawCount++;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds a request for the drawing to a render target to take place either at the end of this frame or at the
+        /// beginning of the next frame.
+        /// </summary>
+        protected void RequestRenderTargetDraw(TargetRenderRequest request)
+        {
+            if(request.RenderTarget == null)
+            {
+                Debug.Error("Null render target, cannot request draw.");
+                return;
+            }
+
+            renderTargetsToDraw.Add(request);
+        }
+
+        /// <summary>
+        /// Called whenever <see cref="RequestRenderTargetDraw(RenderTarget2D, bool)"/> is used to request a draw to a target.
+        /// All the draw code within this method (such as spritebatch.Draw(texture, pos, color)) will write to the render target and not to the screen.
+        /// Default implementation does nothing.
+        /// </summary>
+        /// <param name="target">The render target that is being drawn to.</param>
+        /// <param name="spr">The spritebatch you should draw with.</param>
+        /// <param name="isPreDraw">If true, this method is being called from before a draw call. If false, it is being called after a draw call.</param>
+        protected virtual void DrawRenderTarget(TargetRenderRequest request, SpriteBatch spr)
+        {
+
         }
 
         /// <summary>
@@ -113,6 +192,24 @@ namespace Engine.Screens
         public virtual void OnDisabled()
         {
 
+        }
+    }
+
+    public struct TargetRenderRequest
+    {
+        public bool IsPreDraw;
+        public RenderTarget2D RenderTarget;
+        public SpriteSortMode SortMode;
+        // TODO add other spritebatch options
+        // ...
+        public object CustomData;
+
+        public TargetRenderRequest(RenderTarget2D target, bool preDraw)
+        {
+            RenderTarget = target;
+            IsPreDraw = preDraw;
+            CustomData = null;
+            SortMode = SpriteSortMode.Deferred;
         }
     }
 }
