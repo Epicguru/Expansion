@@ -2,7 +2,7 @@
 
 namespace Engine
 {
-    public static class Random
+    public static class Rand
     {
         private static System.Random rand = new System.Random();
         private const int MAX_RAND = int.MaxValue / 2;
@@ -94,6 +94,18 @@ namespace Engine
             }
 
             return Value <= probabilty;
+        }
+
+        /// <summary>
+        /// Returns a random point on the circumference of a circle of radius 1.
+        /// </summary>
+        public static Vector2 UnitCircle()
+        {
+            float angle = Range(0f, (float)System.Math.PI * 2f);
+            float x = (float)System.Math.Cos(angle);
+            float y = (float)System.Math.Sin(angle);
+
+            return new Vector2(x, y);
         }
     }
 }

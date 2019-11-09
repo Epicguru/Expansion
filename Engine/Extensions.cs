@@ -48,5 +48,10 @@ namespace Engine
         {
             vector = vector.GetNormalized();
         }
+
+        public static Bounds ToBounds(this Rectangle rect)
+        {
+            return new Bounds(rect);
+        }
     }
 }

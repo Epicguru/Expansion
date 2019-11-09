@@ -1,8 +1,6 @@
-﻿
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework.Graphics;
 
-namespace Expansion
+namespace Engine.Tiles
 {
     public struct Tile
     {

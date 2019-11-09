@@ -1,10 +1,8 @@
-﻿
-using Engine;
-using Engine.Sprites;
+﻿using Engine.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace Expansion
+namespace Engine.Tiles
 {
     public class TileDef
     {

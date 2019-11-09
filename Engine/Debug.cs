@@ -1,5 +1,6 @@
 ﻿using Engine.IO;
 using Engine.Screens;
+using Engine.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -210,11 +211,14 @@ namespace Engine
 
         internal static void Draw(SpriteBatch spr)
         {
-            if (!JEngine.ScreenManager.GetScreen<DebugDisplayScreen>().Visible)
+            bool vis = JEngine.ScreenManager.GetScreen<DebugDisplayScreen>().Visible;
+            if(!vis)
+            {
+                toDraw.Clear();
                 return;
-
+            }
             // Draw all stuff that is pending.
-            while (toDrawUI.Count > 0)
+            while (toDraw.Count > 0)
             {
                 (var method, object[] args) = toDraw[0];
                 toDraw.RemoveAt(0);
@@ -225,8 +229,12 @@ namespace Engine
 
         internal static void DrawUI(SpriteBatch spr)
         {
-            if (!JEngine.ScreenManager.GetScreen<DebugDisplayScreen>().Visible)
+            bool vis = JEngine.ScreenManager.GetScreen<DebugDisplayScreen>().Visible;
+            if (!vis)
+            {
+                toDrawUI.Clear();
                 return;
+            }
 
             double total = Loop.Statistics.FrameTotalTime;
             double update = Loop.Statistics.FrameUpdateTime;

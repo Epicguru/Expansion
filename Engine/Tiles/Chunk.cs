@@ -1,10 +1,11 @@
-﻿using System;
-using Engine;
+﻿using Engine.Entities;
 using Engine.MathUtils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
 
-namespace Expansion
+namespace Engine.Tiles
 {
     public class Chunk : IDisposable
     {
@@ -17,23 +18,27 @@ namespace Expansion
         public int X { get; private set; }
         public int Y { get; private set; }
         public long ID { get; private set; }
-        public float TimeSinceVisible { get; set; }
-        public int FramesSinceVisible { get; set; }
+        public bool RequiresRedraw { get; private set; } = false;
+        public float TimeSinceRendered { get; private set; }
+        public float TimeSinceNeeded { get; private set; }
+        public int FramesSinceRendered { get; private set; }
+        public int FramesSinceNeeded { get; private set; }
+        public int EntityCount { get { return entities?.Count ?? 0; } }
+        public ChunkGraphics Graphics { get; private set; }
 
-        public bool RequiresRedraw { get; internal set; } = false;
-
-        public RenderTarget2D RT;
-
+        internal List<Entity> entities = new List<Entity>();
         private readonly Tile[] tiles;
 
         public Chunk(int x, int y)
         {
-            Relocate(x, y);
-
             tiles = new Tile[SIZE * SIZE];
-            RT = new RenderTarget2D(JEngine.MainGraphicsDevice, SIZE * Tile.SIZE, SIZE * Tile.SIZE);
-            RT.Name = "Chunk Render Target";
+            this.X = x;
+            this.Y = y;
+            this.ID = ((long)x << 32) | (uint)y;
+            
             TotalCount++;
+
+            Graphics = new ChunkGraphics(this);
         }
 
         ~Chunk()
@@ -41,13 +46,37 @@ namespace Expansion
             TotalCount--;
         }
 
-        public void Relocate(int newX, int newY)
+        public void RequestRedraw()
         {
-            this.X = newX;
-            this.Y = newY;
-            this.ID = ((long)newX << 32) | (long)(uint)newY;
-
             RequiresRedraw = true;
+            if (!Graphics.CanRender)
+                Graphics.Create();
+        }
+
+        public void UnloadGraphics()
+        {
+            Graphics.Dispose();
+        }
+
+        public void FlagAsNeeded()
+        {
+            TimeSinceNeeded = 0f;
+            FramesSinceNeeded = 0;
+        }
+
+        public void FlagAsRendered()
+        {
+            TimeSinceRendered = 0f;
+            FramesSinceRendered = 0;
+        }
+
+        public void Decay(float dt)
+        {
+            TimeSinceRendered += dt;
+            FramesSinceRendered++;
+
+            TimeSinceNeeded += dt;
+            FramesSinceNeeded++;
         }
 
         public void SetTile(int localX, int localY, Tile tile)
@@ -145,19 +174,24 @@ namespace Expansion
                     tiles[x + y * SIZE] = new Tile(1, ColorCache.EnsureColor(c));
                 }
             }
-
-            //Debug.Log("Min: " + min.ToString());
-            //Debug.Log("Max: " + max.ToString());
         }
 
         public void Dispose()
         {
-            RequiresRedraw = false;
-            if(RT != null && !RT.IsDisposed)
+            if(Graphics != null)
             {
-                RT.Dispose();
-                RT = null;
+                Graphics.Dispose();
+                Graphics.Chunk = null;
+                Graphics = null;
             }
+           
+            RequiresRedraw = false;
+            foreach (var e in entities)
+            {
+                e.CurrentChunk = null;
+            }
+            entities?.Clear();
+            entities = null;
         }
     }
 }

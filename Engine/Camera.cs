@@ -76,6 +76,20 @@ namespace Engine
             return Vector2.Transform(worldPos, _matrix);
         }
 
+        public bool ContainsPoint(Vector2 point, float padX, float padY)
+        {
+            if(padX == 0 && padY == 0)
+            {
+                return WorldViewBounds.Contains(point);
+            }
+            else
+            {
+                var bounds = WorldViewBounds;
+                bounds.Inflate(padX, padY);
+                return bounds.Contains(point);
+            }
+        }
+
         public Matrix GetMatrix()
         {
             return _matrix;

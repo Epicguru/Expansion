@@ -1,6 +1,7 @@
 ﻿using Engine;
 using Engine.Screens;
 using Engine.Sprites;
+using Engine.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -40,7 +41,7 @@ namespace Expansion
         private Sprite TreeLines, TreeColor;
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
-        private TileLayer Layer;
+        private TileLayer Layer { get { return JEngine.TileMap; } }
 
         public BaseScreen() : base("Base Screen")
         {
@@ -49,7 +50,6 @@ namespace Expansion
         public override void Init()
         {
             JEngine.ScreenManager.GetScreen<CameraMoveScreen>().Active = true;
-            Layer = new TileLayer();
         }
 
         public override void LoadContent(Content contentManager)
@@ -65,6 +65,16 @@ namespace Expansion
         private List<long> toBin = new List<long>();
         public override void Update()
         {
+            if (Input.KeyPressed(Keys.F))
+            {
+                for (int i = 0; i < 50; i++)
+                {
+                    var e = new TestEntity();
+                    e.Position = Input.MouseWorldPos;
+                    e.Velocity = Rand.UnitCircle() * Rand.Range(0.25f, 10f) * Tile.SIZE;
+                }
+            }
+
             if (Input.KeyPressed(Keys.C))
                 return;
 
@@ -75,20 +85,25 @@ namespace Expansion
             {
                 if (chunk != null)
                 {
-                    if (chunk.TimeSinceVisible > CHUNK_UNLOAD_TIME && chunk.FramesSinceVisible > 3)
+                    if (chunk.EntityCount != 0)
+                    {
+                        chunk.FlagAsNeeded();                        
+                    }
+                    if(chunk.TimeSinceNeeded > CHUNK_UNLOAD_TIME && chunk.FramesSinceNeeded > 2)
                     {
                         toBin.Add(chunk.ID);
                         continue;
                     }
-                    chunk.TimeSinceVisible += Time.unscaledDeltaTime;
-                    chunk.FramesSinceVisible++;
-
-                    if (chunk.RequiresRedraw)
+                    if(chunk.TimeSinceRendered > CHUNK_UNLOAD_TIME && chunk.FramesSinceRendered > 2)
                     {
-                        RequestRenderTargetDraw(new TargetRenderRequest(chunk.RT, true) { CustomData = chunk });
+                        chunk.UnloadGraphics();
+                    }
+                    chunk.Decay(Time.unscaledDeltaTime);
+
+                    if (chunk.RequiresRedraw && count < MAX_PER_FRAME && chunk.Graphics.Texture != null)
+                    {
                         count++;
-                        if (count >= MAX_PER_FRAME)
-                            break;
+                        RequestRenderTargetDraw(new TargetRenderRequest(chunk.Graphics.Texture, true) { CustomData = chunk });
                     }
                 }
             }
@@ -122,15 +137,26 @@ namespace Expansion
             Debug.Text($"Chunk Bounds: {minX}->{maxX}, {minY}->{maxY}.");
             Debug.Text($"Cam pos: {JEngine.Camera.Position}");
             Debug.Text($"Chunks in memory: {Chunk.TotalCount}");
+            Debug.Text($"Chunks loaded: {Layer.LoadedChunkCount}");
+            Debug.Text($"Chunks textures in vid.mem.: {ChunkGraphics.TotalTextureCount}");
             long bytesPerChunk = Chunk.SIZE * Chunk.SIZE * Tile.SIZE * Tile.SIZE;
-            long totalBytes = Chunk.TotalCount * bytesPerChunk;
+            long totalBytes = ChunkGraphics.TotalTextureCount * bytesPerChunk;
             Debug.Text($"EST. Chunk video mem: {totalBytes / (1024 * 256)} MB.");
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)
                 {
                     if (!Layer.IsChunkLoaded(x, y))
-                        Layer.LoadChunk(x, y);
+                    {
+                        var loaded = Layer.LoadChunk(x, y);
+                        loaded.RequestRedraw();
+                    }
+                    else
+                    {
+                        var c = Layer.GetChunk(x, y);
+                        if (!c.Graphics.CanRender)
+                            c.RequestRedraw();
+                    }
                 }
             }
 
@@ -141,9 +167,11 @@ namespace Expansion
                 if (chunk.Y < minY || chunk.Y > maxY)
                     continue;
 
-                spr.Draw(chunk.RT, new Vector2(chunk.X * Chunk.SIZE * Tile.SIZE, chunk.Y * Chunk.SIZE * Tile.SIZE), Color.White);
-                chunk.TimeSinceVisible = 0f;
-                chunk.FramesSinceVisible = 0;
+                if(chunk.Graphics.CanRender)
+                    spr.Draw(chunk.Graphics.Texture, new Vector2(chunk.X * Chunk.SIZE * Tile.SIZE, chunk.Y * Chunk.SIZE * Tile.SIZE), Color.White);
+
+                chunk.FlagAsNeeded();
+                chunk.FlagAsRendered();
             }
         }
     }

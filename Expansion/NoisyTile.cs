@@ -1,5 +1,6 @@
 ﻿
 using Engine.Sprites;
+using Engine.Tiles;
 
 namespace Expansion
 {

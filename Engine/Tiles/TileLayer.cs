@@ -1,21 +1,16 @@
-﻿
-using Engine;
-using Engine.Screens;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 
-namespace Expansion
+namespace Engine.Tiles
 {
     public class TileLayer : IDisposable
     {
         public static bool AutoLoadChunks = true;
 
         public int LoadedChunkCount { get { return loadedChunks.Count; } }
-        public int PooledChunkCount { get { return pooled.Count; } }
 
         private Dictionary<long, Chunk> loadedChunks = new Dictionary<long, Chunk>();
-        private Queue<Chunk> pooled = new Queue<Chunk>();
 
         public IEnumerable<Chunk> GetRedrawChunks()
         {
@@ -55,18 +50,14 @@ namespace Expansion
             return GetChunk(id);
         }
 
-        private Chunk GetOrMakeChunk(int cx, int cy)
+        public Chunk GetChunk(Point pos)
         {
-            if(pooled.Count > 0)
-            {
-                var got = pooled.Dequeue();
-                got.Relocate(cx, cy);
-                return got;
-            }
-            else
-            {
-                return new Chunk(cx, cy);
-            }
+            return GetChunk(pos.X, pos.Y);
+        }
+
+        private Chunk MakeChunk(int cx, int cy)
+        {
+            return new Chunk(cx, cy);            
         }
 
         public void SetTile(int x, int y, Tile tile)
@@ -105,6 +96,11 @@ namespace Expansion
             return new Point((int)Math.Floor((float)tileX / Chunk.SIZE), (int)Math.Floor((float)tileY / Chunk.SIZE));
         }
 
+        public Point PixelToTileCoords(int px, int py)
+        {
+            return new Point((int)Math.Floor((float)px / Tile.SIZE), (int)Math.Floor((float)py / Tile.SIZE));
+        }
+
         public Chunk LoadChunk(long chunkID)
         {
             if(IsChunkLoaded(chunkID))
@@ -114,14 +110,12 @@ namespace Expansion
             }
 
             Point coords = MakeChunkCoords(chunkID);
-            Chunk chunk = GetOrMakeChunk(coords.X, coords.Y);
-            chunk.TimeSinceVisible = 0f;
+            Chunk chunk = MakeChunk(coords.X, coords.Y);
+            chunk.FlagAsNeeded();
 
-            // TODO load chunk data here since it still contains old data.
             chunk.LoadData();
             //Debug.Trace($"Loaded {coords.X}, {coords.Y}");
 
-            chunk.RequiresRedraw = true;
 
             Debug.Assert(chunk.ID == chunkID, "Chunk ID not as expected or specified!");
             loadedChunks.Add(chunk.ID, chunk);
@@ -144,8 +138,8 @@ namespace Expansion
 
             var chunk = loadedChunks[chunkID];
             loadedChunks.Remove(chunkID);
-            pooled.Enqueue(chunk);
-
+            chunk.Dispose();
+            // URGTODO pool textures.
             //var coords = MakeChunkCoords(chunkID);
             //Debug.Trace($"Unloaded {coords.X}, {coords.Y}");
         }

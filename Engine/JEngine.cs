@@ -1,8 +1,10 @@
 ﻿
+using Engine.Entities;
 using Engine.Loaders;
 using Engine.Packer;
 using Engine.Screens;
 using Engine.Sprites;
+using Engine.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -24,6 +26,8 @@ namespace Engine
         public static readonly Camera Camera = new Camera();
         public static Color BackgroundColor = Color.CornflowerBlue;
         public static ScreenManager ScreenManager { get; private set; }
+        public static EntityManager Entities { get; private set; }
+        public static TileLayer TileMap { get; private set; }
         public static SpriteAtlas MainAtlas { get; private set; }
         public static Sprite Pixel { get; private set; }
 
@@ -107,6 +111,9 @@ namespace Engine
             UponRegisterScreens?.Invoke(ScreenManager);
             // TODO register manager screens.
 
+            Entities = new EntityManager();
+            TileMap = new TileLayer();
+
             ScreenManager.Initialize();
 
             base.Initialize();
@@ -160,11 +167,13 @@ namespace Engine
         internal static void EngineUpdate()
         {
             ScreenManager.Update();
+            Entities.UpdateAll();
         }
 
         internal static void EngineDraw()
         {
             ScreenManager.Draw(MainSpriteBatch);
+            Entities.DrawAll(MainSpriteBatch);
         }
 
         internal static void EngineDrawUI()

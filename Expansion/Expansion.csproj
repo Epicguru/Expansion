@@ -44,14 +44,10 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ColorCache.cs" />
     <Compile Include="NoisyTile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tile.cs" />
-    <Compile Include="TileDef.cs" />
-    <Compile Include="TileLayer.cs" />
-    <Compile Include="Chunk.cs" />
+    <Compile Include="TestEntity.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">

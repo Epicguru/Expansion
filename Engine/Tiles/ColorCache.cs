@@ -1,9 +1,7 @@
-﻿
-using Engine;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace Expansion
+namespace Engine.Tiles
 {
     public static class ColorCache
     {

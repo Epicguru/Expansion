@@ -1,5 +1,6 @@
 ﻿using Engine.GUI;
 using Engine.Screens;
+using Engine.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -278,13 +279,30 @@ namespace Engine
             Input.StartFrame();
             Debug.Update();
 
+            #region Debug Text
             Debug.Text($"FPS: {Framerate:F0} (Target: {(TargetFramerate == 0 ? "uncapped" : TargetFramerate.ToString("F0"))}, VSync: {VSyncMode})");
             Debug.Text($"Time Scale: {Time.TimeScale}");
             Debug.Text($"Screen Res: ({Screen.Width}x{Screen.Height})");
+            Debug.Text($"Allocated memory: {System.GC.GetTotalMemory(false) / 1024 / 1024}MB.");
             Debug.Text($"Texture Swap Count: {Loop.Statistics.DrawMetrics.TextureCount}");
             Debug.Text($"Draw Calls: {Loop.Statistics.DrawMetrics.DrawCount}");
             Debug.Text($"Sprites Drawn: {Loop.Statistics.DrawMetrics.SpriteCount}");
-            Debug.Text($"Render Target Draw Count: {Loop.Statistics.RenderTargetDraws}");           
+            Debug.Text($"Render Target Draw Count: {Loop.Statistics.RenderTargetDraws}");
+            Debug.Text($"Total Entities: {JEngine.Entities.EntityCount} of {JEngine.Entities.MaxEntityCount}.");
+            var tm = JEngine.TileMap;
+            var tilePos = tm.PixelToTileCoords((int)Input.MouseWorldPos.X, (int)Input.MouseWorldPos.Y);
+            var chunkPos = tm.TileToChunkCoords(tilePos.X, tilePos.Y);
+            Chunk chunk = tm.GetChunk(chunkPos);
+            Debug.Box(new Rectangle(chunkPos.X * Chunk.SIZE * Tile.SIZE, chunkPos.Y * Chunk.SIZE * Tile.SIZE, Chunk.SIZE * Tile.SIZE, Chunk.SIZE * Tile.SIZE), new Color(20, 60, 160, 50));
+            if (chunk == null)
+            {
+                Debug.Text($"Chunk under mouse ({chunkPos}) is not loaded.");
+            }
+            else
+            {
+                Debug.Text($"Chunk under mouse: {chunkPos}, contains {chunk.EntityCount} entities.");
+            }
+            #endregion
 
             if (Input.KeyDown(Keys.E))
                 JEngine.Camera.UpdateViewBounds = !JEngine.Camera.UpdateViewBounds;
