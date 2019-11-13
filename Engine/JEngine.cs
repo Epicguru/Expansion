@@ -20,6 +20,7 @@ namespace Engine
 
         public static GameWindow GameWindow { get; private set; }
         public static GraphicsDevice MainGraphicsDevice { get; private set; }
+        public static GraphicsDeviceManager GraphicsDeviceManager { get; private set; }
         public static SpriteBatch MainSpriteBatch { get; private set; }
         public static Content ContentManager { get; private set; }
         public static ContentManager XNAContent { get; private set; }
@@ -36,7 +37,6 @@ namespace Engine
         public static Action<Content> UponLoadContent;
 
         private static FixedSizeSpritePacker packer;
-        private readonly GraphicsDeviceManager graphics;
         private static readonly ConcurrentQueue<Action> pendingThreadActions = new ConcurrentQueue<Action>();
 
         [STAThread]
@@ -59,11 +59,11 @@ namespace Engine
 
         public JEngine()
         {
-            graphics = new GraphicsDeviceManager(this);
+            GraphicsDeviceManager = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
 
             // Make the back buffer be preserved even when we swap out render targets at runtime.
-            graphics.PreparingDeviceSettings += (object s, PreparingDeviceSettingsEventArgs args) =>
+            GraphicsDeviceManager.PreparingDeviceSettings += (object s, PreparingDeviceSettingsEventArgs args) =>
             {
                 args.GraphicsDeviceInformation.PresentationParameters.RenderTargetUsage = RenderTargetUsage.PreserveContents;
             };

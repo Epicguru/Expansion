@@ -38,8 +38,8 @@ namespace Expansion
     {
         public const float CHUNK_UNLOAD_TIME = 0.1f;
 
+        internal static Sprite TreeLines, TreeColor;
         public static Sprite MissileSprite;
-        private Sprite TreeLines, TreeColor;
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
         private TileLayer Layer { get { return JEngine.TileMap; } }
@@ -67,6 +67,11 @@ namespace Expansion
         private List<long> toBin = new List<long>();
         public override void Update()
         {
+            if (Input.KeyDown(Keys.F11))
+            {
+                Screen.ToggleFullscreen();
+            }
+
             if (Input.KeyPressed(Keys.F))
             {
                 for (int i = 0; i < 50; i++)
@@ -161,6 +166,7 @@ namespace Expansion
             int maxX = minX + (int)Math.Ceiling((float)JEngine.Camera.WorldViewBounds.Width / (Tile.SIZE * Chunk.SIZE)) + PADDING * 2;
             int maxY = minY + (int)Math.Ceiling((float)JEngine.Camera.WorldViewBounds.Width / (Tile.SIZE * Chunk.SIZE)) + PADDING * 2;
 
+            // Debug texts.
             Debug.Text($"Chunk Bounds: {minX}->{maxX}, {minY}->{maxY}.");
             Debug.Text($"Cam pos: {JEngine.Camera.Position}");
             Debug.Text($"Chunks in memory: {Chunk.TotalCount}");
@@ -169,6 +175,19 @@ namespace Expansion
             long bytesPerChunk = Chunk.SIZE * Chunk.SIZE * Tile.SIZE * Tile.SIZE;
             long totalBytes = ChunkGraphics.TotalTextureCount * bytesPerChunk;
             Debug.Text($"EST. Chunk video mem: {totalBytes / (1024 * 256)} MB.");
+
+            int count = 0;
+            foreach (var item in GraphicsAdapter.Adapters)
+            {
+                Debug.Text($"-- Graphics Adapter {count}: {item.DeviceName.ToLower()} {(item.IsDefaultAdapter ? "[Default]" : "")} --");
+                count++;
+
+                Debug.Text($"[{item.DeviceId}]: {item.Description}");
+                Debug.Text($"Curernt display mode: {item.CurrentDisplayMode.Width}x{item.CurrentDisplayMode.Height}, {item.CurrentDisplayMode.Format}");
+                Debug.Text($"Widescreen? {item.IsWideScreen}");
+                Debug.Text($"Vendor ID: {item.VendorId}");
+            }
+
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)

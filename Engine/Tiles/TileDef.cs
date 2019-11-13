@@ -51,6 +51,10 @@ namespace Engine.Tiles
         public virtual void Draw(SpriteBatch spr, Tile tile, Chunk chunk, int localX, int localY)
         {
             spr.Draw(Sprite, new Rectangle(localX * SIZE, localY * SIZE, SIZE, SIZE), ColorCache.GetColor(tile.ColorRef));
+            if (tile.HasTree)
+            {
+                spr.Draw(BaseScreen.TreeLines, new Vector2(localX * SIZE + SIZE / 2 - BaseScreen.TreeLines.Width / 2, localY * SIZE + SIZE / 2 - BaseScreen.TreeLines.Height), Color.White);
+            }
         }
     }
 }
