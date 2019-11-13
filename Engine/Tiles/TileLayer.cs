@@ -91,9 +91,19 @@ namespace Engine.Tiles
             c.SetTile(localX, localY, tile);
         }
 
+        public Point TileToChunkCoords(Point tilePos)
+        {
+            return TileToChunkCoords(tilePos.X, tilePos.Y);
+        }
+
         public Point TileToChunkCoords(int tileX, int tileY)
         {
             return new Point((int)Math.Floor((float)tileX / Chunk.SIZE), (int)Math.Floor((float)tileY / Chunk.SIZE));
+        }
+
+        public Point PixelToTileCoords(Point pixelCoords)
+        {
+            return PixelToTileCoords(pixelCoords.X, pixelCoords.Y);
         }
 
         public Point PixelToTileCoords(int px, int py)

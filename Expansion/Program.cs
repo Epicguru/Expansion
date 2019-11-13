@@ -38,6 +38,7 @@ namespace Expansion
     {
         public const float CHUNK_UNLOAD_TIME = 0.1f;
 
+        public static Sprite MissileSprite;
         private Sprite TreeLines, TreeColor;
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
@@ -57,6 +58,7 @@ namespace Expansion
             TreeLines = contentManager.Load<Sprite>("NewTreeLines");
             TreeColor = contentManager.Load<Sprite>("NewTreeColor");
             NoiseTileSprite = contentManager.Load<Sprite>("TileNoise");
+            MissileSprite = contentManager.Load<Sprite>("Missile");
             NoiseTileDef = new TileDef(1, "Test Tile");
             NoiseTileDef.Sprite = NoiseTileSprite;
             TileDef.Register(NoiseTileDef);
@@ -70,9 +72,33 @@ namespace Expansion
                 for (int i = 0; i < 50; i++)
                 {
                     var e = new TestEntity();
-                    e.Position = Input.MouseWorldPos;
+                    e.Center = Input.MouseWorldPos;
                     e.Velocity = Rand.UnitCircle() * Rand.Range(0.25f, 10f) * Tile.SIZE;
                 }
+            }
+
+            if (Input.KeyPressed(Keys.Y))
+            {
+                var e = new TestActive();
+                e.Center = Input.MouseWorldPos;
+            }
+
+            if (Input.KeyPressed(Keys.L))
+            {
+                float r = Tile.SIZE * 5;
+                foreach (var entity in JEngine.Entities.GetAllInRange(Input.MouseWorldPos, r))
+                {
+                    entity.Destroy();
+                }
+            }
+
+            if (Input.KeyDown(Keys.Space))
+                System.GC.Collect();
+
+            if (Input.KeyDown(Keys.T))
+            {
+                var missile = new MissileEntity();
+                missile.Position = Input.MouseWorldPos - missile.Size * 0.5f;
             }
 
             if (Input.KeyPressed(Keys.C))
@@ -89,6 +115,7 @@ namespace Expansion
                     {
                         chunk.FlagAsNeeded();                        
                     }
+
                     if(chunk.TimeSinceNeeded > CHUNK_UNLOAD_TIME && chunk.FramesSinceNeeded > 2)
                     {
                         toBin.Add(chunk.ID);
@@ -173,6 +200,11 @@ namespace Expansion
                 chunk.FlagAsNeeded();
                 chunk.FlagAsRendered();
             }
+        }
+
+        public override void DrawUI(SpriteBatch spr)
+        {
+            //spr.Draw(JEngine.MainAtlas.Texture, new Vector2(10, 10), Color.White);
         }
     }
 }

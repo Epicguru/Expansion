@@ -2,7 +2,6 @@
 using Engine.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
 
 namespace Engine.Entities
 {
@@ -10,6 +9,7 @@ namespace Engine.Entities
     {
         public string Name { get; protected set; }
         public Vector2 Position = Vector2.Zero;
+        public Vector2 Center { get { return Bounds.Center; } set { Position = value - Size * 0.5f; } }
         public Vector2 Size = new Vector2(32, 32);
         public Bounds Bounds { get { return new Bounds(Position, Size); } }
         public ushort ID { get; internal set; }
@@ -17,6 +17,7 @@ namespace Engine.Entities
         public bool AreBoundsOnScreen { get { return JEngine.Camera.WorldViewBounds.ToBounds().Overlaps(Bounds); } }
         public Chunk CurrentChunk { get; internal set; }
         public bool DoChunkParenting { get; protected set; } = true;
+        public bool IsDestroyed { get; internal set; }
 
         internal bool RemovePending { get; set; }
 
@@ -47,7 +48,7 @@ namespace Engine.Entities
                 return;
             }
 
-            em.Register(this);
+            em.StartRegister(this);
         }
 
         public virtual void Destroy()
@@ -62,6 +63,7 @@ namespace Engine.Entities
 
         internal void InternalOnDestroyed()
         {
+            IsDestroyed = true;
             this.OnDestroyed();
         }
 

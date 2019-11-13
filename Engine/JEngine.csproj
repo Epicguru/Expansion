@@ -50,6 +50,7 @@
     <Compile Include="Content.cs" />
     <Compile Include="ContentLoader.cs" />
     <Compile Include="Debug.cs" />
+    <Compile Include="Entities\ActiveEntity.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityManager.cs" />
     <Compile Include="JEngine.cs" />

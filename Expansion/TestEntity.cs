@@ -11,13 +11,11 @@ namespace Expansion
         public TestEntity() : base("Test Entity")
         {
             Size = new Vector2(32, 32);
+            DoChunkParenting = false;
         }
 
         public override void Update()
         {
-            Vector2 diff = (Input.MouseWorldPos - Position);
-            Velocity += diff.GetNormalized() * diff.Length() * 0.5f * Time.deltaTime;
-
             Position += Velocity * Time.deltaTime;
         }
     }

@@ -46,6 +46,11 @@ namespace Engine.Tiles
             TotalCount--;
         }
 
+        public void ClearEntities()
+        {
+            entities.Clear();
+        }
+
         public void RequestRedraw()
         {
             RequiresRedraw = true;

@@ -44,9 +44,11 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="MissileEntity.cs" />
     <Compile Include="NoisyTile.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestActive.cs" />
     <Compile Include="TestEntity.cs" />
   </ItemGroup>
   <ItemGroup>

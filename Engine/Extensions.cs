@@ -16,6 +16,11 @@ namespace Engine
             Draw(spr, sprite, new Rectangle((int)position.X, (int)position.Y, sprite.Bounds.Width, sprite.Bounds.Height), color, 0f, Vector2.Zero, SpriteEffects.None, 0f);
         }
 
+        public static void Draw(this SpriteBatch spr, Sprite sprite, Vector2 position, Color color, float rotation, Vector2 origin, SpriteEffects effect, float depth)
+        {
+            spr.Draw(sprite.Texture, new Rectangle(position.ToPoint(), sprite.Bounds.Size), sprite.Bounds, color, rotation, origin, effect, depth);
+        }
+
         public static void Draw(this SpriteBatch spr, Sprite sprite, Rectangle position, Color color, float rotation, Vector2 origin, SpriteEffects effect, float depth)
         {
             spr.Draw(sprite.Texture, position, sprite.Bounds, color, rotation, origin, effect, depth);

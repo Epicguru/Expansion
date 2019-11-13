@@ -1,4 +1,5 @@
 ﻿
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
@@ -11,10 +12,34 @@ namespace Engine.Entities
         public int MaxEntityCount { get { return entities.Length - 1; } }
 
         private List<Entity> allEntities = new List<Entity>();
+        private Queue<Entity> toAdd = new Queue<Entity>();
         private Entity[] entities = new Entity[ushort.MaxValue + 1];
         private int highestID = 1;
 
-        internal ushort Register(Entity e)
+        internal void StartRegister(Entity e)
+        {
+            if (e == null)
+            {
+                Debug.Error("Entity is null, cannot register.");
+                return;
+            }
+
+            if (e.ID != 0)
+            {
+                Debug.Error($"Entity {e} is already registered somewhere! Expected ID 0, has ID {e.ID}.");
+                return;
+            }
+
+            if (e.RemovePending)
+            {
+                Debug.Warn($"Trying to register an entity that is already flagged for removal... Will not be registered.");
+                return;
+            }
+
+            toAdd.Enqueue(e);
+        }
+
+        private ushort Register(Entity e)
         {
             if(e == null)
             {
@@ -63,6 +88,7 @@ namespace Engine.Entities
                 return;
             }
 
+            e.InternalOnDestroyed();
             entities[e.ID] = null;
             EntityCount--;
             allEntities.Remove(e);
@@ -104,31 +130,43 @@ namespace Engine.Entities
 
         public void UpdateAll()
         {
+            // Add in new entities...
+            while(toAdd.Count > 0)
+            {
+                var pending = toAdd.Dequeue();
+                Register(pending);
+            }
+
             for (int i = 0; i < allEntities.Count; i++)
             {
                 var e = allEntities[i];
-                if (e.RemovePending)
-                {
-                    Unregister(e);
-                    e.InternalOnDestroyed();
-                    i--;
-                    continue;
-                }
+                if (e.RemovePending)                
+                    continue;                
 
-                var coords = e.GetChunkCoords();
-                if (e.CurrentChunk == null || (e.CurrentChunk.X != coords.X || e.CurrentChunk.Y != coords.Y))
+                                              
+
+                e.Update();
+            }
+
+            foreach (var chunk in JEngine.TileMap.GetLoadedChunks())
+            {
+                chunk.ClearEntities();
+            }
+            foreach (var e in allEntities)
+            {
+                e.CurrentChunk = null;
+                if (e.DoChunkParenting)
                 {
+                    var coords = e.GetChunkCoords();
+
                     // Update chunk...
                     var chunk = JEngine.TileMap.GetChunk(coords.X, coords.Y);
                     if (chunk == null)
                         chunk = JEngine.TileMap.LoadChunk(coords.X, coords.Y);
 
-                    e.CurrentChunk?.entities.Remove(e);
                     chunk.entities.Add(e);
                     e.CurrentChunk = chunk;
                 }
-
-                e.Update();
             }
         }
 
@@ -140,19 +178,72 @@ namespace Engine.Entities
                 var e = allEntities[i];
                 if (e.RemovePending)
                 {
-                    Unregister(e);
-                    e.InternalOnDestroyed();
                     i--;
-                    continue;
-                }                
+                    Unregister(e);
+                    continue;                                
+                }               
 
-                if(e.CullingMode == EntityCullingMode.Bounds)
+                if(e.CullingMode == EntityCullingMode.Bounds || (!e.DoChunkParenting && e.CullingMode != EntityCullingMode.None))
                 {
                     if (!cam.ContainsPoint(e.Position, e.Size.X * 2f, e.Size.Y * 2f))
                         continue;
                 }
+                else if(e.CullingMode == EntityCullingMode.Chunk)
+                {
+                    if (e.CurrentChunk == null || !e.CurrentChunk.Graphics.CanRender)
+                        continue;
+                }
 
                 e.Draw(spr);
+            }
+        }
+
+        public IEnumerable<Entity> GetAllInRange(Vector2 point, float radius, bool fromBoundsCenter = true)
+        {
+            if(radius <= 0)
+            {
+                Debug.Error("Radius must be greater than zero in GetAllInRange.");
+                yield return null;
+            }
+
+            float square = radius * radius;
+            var layer = JEngine.TileMap;
+
+            var topLeft = layer.TileToChunkCoords(layer.PixelToTileCoords((int)(point.X - radius), (int)(point.Y - radius)));
+            var bottomRight = layer.TileToChunkCoords(layer.PixelToTileCoords((int)(point.X + radius), (int)(point.Y + radius)));
+
+            for (int x = topLeft.X; x <= bottomRight.X; x++)
+            {
+                for (int y = topLeft.Y; y <= bottomRight.Y; y++)
+                {
+                    var chunk = layer.GetChunk(x, y);
+                    if (chunk == null)
+                        continue;
+                    
+                    var entities = chunk.entities;
+                    foreach (var entity in entities)
+                    {
+                        Vector2 pos = Vector2.Zero;
+                        if (fromBoundsCenter)
+                        {
+                            // Position is considered to be the center of the bounds. This tends to match sprite graphics.
+                            pos = entity.Position + entity.Size * 0.5f;
+                        }
+                        else
+                        {
+                            // Position is considered as the raw drawing position of the entity.
+                            pos = entity.Position;
+                        }
+
+                        Vector2 diff = point - pos;
+                        float squareDiff = diff.LengthSquared();
+
+                        if(squareDiff <= square)
+                        {
+                            yield return entity;
+                        }
+                    }
+                }
             }
         }
 
@@ -164,7 +255,10 @@ namespace Engine.Entities
             }
 
             entities = null;
-            allEntities.Clear();
+            allEntities?.Clear();
+            allEntities = null;
+            toAdd?.Clear();
+            toAdd = null;
             highestID = 1;
         }
     }

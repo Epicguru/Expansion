@@ -9,6 +9,7 @@ namespace Engine
         public Vector2 Pos;
         public Vector2 Size;
 
+        public Vector2 Center { get { return Pos + Size * 0.5f; } }
         public float Left { get { return Pos.X; } }
         public float Top { get { return Pos.Y; } }
         public float Right { get { return Pos.X + Size.X; } }

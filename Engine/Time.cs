@@ -37,7 +37,6 @@ namespace Engine
         /// The total elapsed time, in seconds, since the game started. Not affected by time scale.
         /// </summary>
         public static float unscaledTime { get; private set; }
-
         /// <summary>
         /// The time, in seconds, since the last frame. Multiply this value by another to create a per-second
         /// relationship. Fundamental to create frame-rate independent code.
@@ -48,6 +47,10 @@ namespace Engine
         /// Useful for UI and other cases where you don't want slow-motion or fast-motion effects to apply.
         /// </summary>
         public static float unscaledDeltaTime { get; private set; }
+        /// <summary>
+        /// Gets the number of frames elapsed since the start of the game opening.
+        /// </summary>
+        public static ulong frames { get; private set; }
 
         private static float _timeScale = 1f;
         private static readonly Stopwatch watch = new Stopwatch();
@@ -58,6 +61,7 @@ namespace Engine
         /// </summary>
         public static void Update()
         {
+            frames++;
             watch.Stop();
 
             unscaledDeltaTime = (float)watch.Elapsed.TotalSeconds;
