@@ -127,7 +127,7 @@ namespace Engine
             MainSpriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Create the main atlas packer.
-            packer = new FixedSizeSpritePacker(512, 512, 1);
+            packer = new FixedSizeSpritePacker(1024, 1024, 1);
             ContentManager.SpritePacker = packer;
 
             UponLoadContent?.Invoke(ContentManager);

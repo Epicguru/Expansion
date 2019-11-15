@@ -20,9 +20,9 @@ namespace Engine.Tiles
             this.HasTree = false;
         }
 
-        public void Draw(SpriteBatch spr, Chunk chunk, int localX, int localY)
+        public void Draw(SpriteBatch spr, Chunk chunk, int localX, int localY, int z)
         {
-            Def.Draw(spr, this, chunk, localX, localY);
+            Def.Draw(spr, this, chunk, localX, localY, z);
         }
     }
 }

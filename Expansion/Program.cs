@@ -34,7 +34,7 @@ namespace Expansion
         }
     }
 
-    class BaseScreen : GameScreen
+    internal class BaseScreen : GameScreen
     {
         public const float CHUNK_UNLOAD_TIME = 0.1f;
 
@@ -62,6 +62,7 @@ namespace Expansion
             NoiseTileDef = new TileDef(1, "Test Tile");
             NoiseTileDef.Sprite = NoiseTileSprite;
             TileDef.Register(NoiseTileDef);
+            TileDef.Register(new TestLinkedTile());
         }
 
         private List<long> toBin = new List<long>();
@@ -104,6 +105,12 @@ namespace Expansion
             {
                 var missile = new MissileEntity();
                 missile.Position = Input.MouseWorldPos - missile.Size * 0.5f;
+            }
+
+            if (Input.KeyPressed(Keys.V))
+            {
+                var p = JEngine.TileMap.PixelToTileCoords((int)Input.MouseWorldPos.X, (int)Input.MouseWorldPos.Y);
+                JEngine.TileMap.SetTile(p.X, p.Y, 1, new Tile(2, ColorCache.EnsureColor(Color.White)));
             }
 
             if (Input.KeyPressed(Keys.C))
@@ -223,7 +230,7 @@ namespace Expansion
 
         public override void DrawUI(SpriteBatch spr)
         {
-            //spr.Draw(JEngine.MainAtlas.Texture, new Vector2(10, 10), Color.White);
+            spr.Draw(JEngine.MainAtlas.Texture, new Vector2(10, 10), Color.White);
         }
     }
 }

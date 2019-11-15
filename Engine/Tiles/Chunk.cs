@@ -14,6 +14,10 @@ namespace Engine.Tiles
         /// The size, in tiles, of each chunk in both the horizontal and vertical directions.
         /// </summary>
         public const int SIZE = 32;
+        /// <summary>
+        /// The length, in tiles, of each and every chunk on the depth plane (z).
+        /// </summary>
+        public const int DEPTH = 2;
 
         public int X { get; private set; }
         public int Y { get; private set; }
@@ -31,9 +35,10 @@ namespace Engine.Tiles
 
         public Chunk(int x, int y)
         {
-            tiles = new Tile[SIZE * SIZE];
             this.X = x;
             this.Y = y;
+
+            tiles = new Tile[SIZE * SIZE * DEPTH];
             this.ID = ((long)x << 32) | (uint)y;
             
             TotalCount++;
@@ -84,7 +89,7 @@ namespace Engine.Tiles
             FramesSinceNeeded++;
         }
 
-        public void SetTile(int localX, int localY, Tile tile)
+        public void SetTile(int localX, int localY, int z, Tile tile)
         {
             if (localX < 0 || localY < 0)
                 return;
@@ -92,24 +97,44 @@ namespace Engine.Tiles
             if (localX >= SIZE || localY >= SIZE)
                 return;
 
-            tiles[localX + localY * SIZE] = tile;
+            tiles[GetIndex(localX, localY, z)] = tile;
 
             RequiresRedraw = true;
         }
 
-        public int GetIndex(int localX, int localY)
+        public Tile GetTile(int localX, int localY, int z)
         {
-            return localX + localY * SIZE;
+            if (localX < 0 || localX >= SIZE)
+                return new Tile(0, 0);
+            if (localY < 0 || localY >= SIZE)
+                return new Tile(0, 0);
+            if (z < 0 || z >= DEPTH)
+                return new Tile(0, 0);
+
+            int index = GetIndex(localX, localY, z);
+            return tiles[index];
         }
 
-        public Point GetLocalCoords(int localIndex)
+        internal Tile GetTileFast(int lx, int ly, int z)
         {
-            return new Point(localIndex % SIZE, localIndex / SIZE);
+            return tiles[GetIndex(lx, ly, z)];
         }
 
-        public Point LocalToWorldCoords(Point localCoords)
+        public int GetIndex(int localX, int localY, int z)
         {
-            return new Point(localCoords.X + X * SIZE, localCoords.Y + Y * SIZE);
+            return localX + localY * SIZE + z * SIZE * SIZE;
+        }
+
+        public Point3D GetLocalCoords(int localIndex)
+        {
+            int z = localIndex / (SIZE * SIZE);
+            int li = localIndex - z * SIZE * SIZE;
+            return new Point3D(li % SIZE, li / SIZE, z);
+        }
+
+        public Point LocalToWorldCoords(Point3D localCoords)
+        {
+            return new Point3D(localCoords.X + X * SIZE, localCoords.Y + Y * SIZE, localCoords.Z);
         }
 
         public Point GetWorldCoords(int localIndex)
@@ -121,17 +146,20 @@ namespace Engine.Tiles
         {
             JEngine.MainGraphicsDevice.Clear(Color.TransparentBlack);
 
-            for (int x = 0; x < SIZE; x++)
+            for (int z = 0; z < DEPTH; z++)
             {
-                for (int y = 0; y < SIZE; y++)
+                for (int x = 0; x < SIZE; x++)
                 {
-                    var tile = tiles[x + y * SIZE];
-                    if (tile.ID != 0)
+                    for (int y = 0; y < SIZE; y++)
                     {
-                        tile.Draw(spr, this, x, y);
+                        var tile = tiles[GetIndex(x, y, z)];
+                        if (tile.ID != 0)
+                        {
+                            tile.Draw(spr, this, x, y, z);
+                        }
                     }
                 }
-            }
+            }            
 
             RequiresRedraw = false;
         }
@@ -176,7 +204,7 @@ namespace Engine.Tiles
                     if (n < min)
                         min = n;
 
-                    tiles[x + y * SIZE] = new Tile(1, ColorCache.EnsureColor(c));
+                    tiles[GetIndex(x, y, 0)] = new Tile(1, ColorCache.EnsureColor(c)) { HasTree = c == Color.LawnGreen ? Rand.Chance(0.2f) : false };
                 }
             }
         }

@@ -48,12 +48,12 @@ namespace Engine.Tiles
             this.Name = name;
         }
 
-        public virtual void Draw(SpriteBatch spr, Tile tile, Chunk chunk, int localX, int localY)
+        public virtual void Draw(SpriteBatch spr, Tile tile, Chunk chunk, int localX, int localY, int z)
         {
             spr.Draw(Sprite, new Rectangle(localX * SIZE, localY * SIZE, SIZE, SIZE), ColorCache.GetColor(tile.ColorRef));
             if (tile.HasTree)
             {
-                spr.Draw(BaseScreen.TreeLines, new Vector2(localX * SIZE + SIZE / 2 - BaseScreen.TreeLines.Width / 2, localY * SIZE + SIZE / 2 - BaseScreen.TreeLines.Height), Color.White);
+                spr.Draw(JEngine.Pixel, new Rectangle(localX * SIZE + SIZE / 2 - 16 / 2, localY * SIZE + SIZE / 2 - 24, 16, 24), Color.OliveDrab);
             }
         }
     }

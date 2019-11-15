@@ -67,6 +67,7 @@
     <Compile Include="MathUtils\Noise.cs" />
     <Compile Include="Packer\SpriteAtlas.cs" />
     <Compile Include="Packer\FixedSizeSpritePacker.cs" />
+    <Compile Include="Point3D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="Random.cs" />
@@ -82,6 +83,7 @@
     <Compile Include="Tiles\Chunk.cs" />
     <Compile Include="Tiles\ChunkGraphics.cs" />
     <Compile Include="Tiles\ColorCache.cs" />
+    <Compile Include="Tiles\LinkedTile.cs" />
     <Compile Include="Tiles\Tile.cs" />
     <Compile Include="Tiles\TileDef.cs" />
     <Compile Include="Tiles\TileLayer.cs" />

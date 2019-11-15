@@ -36,6 +36,22 @@ namespace Engine.Tiles
             return IsChunkLoaded(MakeChunkID(chunkX, chunkY));
         }
 
+        public Tile GetTile(int x, int y, int z, bool load)
+        {
+            var cp = TileToChunkCoords(x, y);
+            Chunk c = GetChunk(cp);
+
+            if (c == null)
+            {
+                if (load)
+                    c = LoadChunk(cp.X, cp.Y);
+                else
+                    return new Tile(0, 0);
+            }
+
+            return c.GetTileFast(x - c.X * Chunk.SIZE, y - c.Y * Chunk.SIZE, z);
+        }
+
         public Chunk GetChunk(long id)
         {
             if (loadedChunks.ContainsKey(id))
@@ -60,7 +76,7 @@ namespace Engine.Tiles
             return new Chunk(cx, cy);            
         }
 
-        public void SetTile(int x, int y, Tile tile)
+        public void SetTile(int x, int y, int z, Tile tile)
         {
             Point chunkCoords = TileToChunkCoords(x, y);
             long id = MakeChunkID(chunkCoords.X, chunkCoords.Y);
@@ -88,7 +104,7 @@ namespace Engine.Tiles
             int localX = x - c.X * Chunk.SIZE;
             int localY = y - c.Y * Chunk.SIZE;
 
-            c.SetTile(localX, localY, tile);
+            c.SetTile(localX, localY, z, tile);
         }
 
         public Point TileToChunkCoords(Point tilePos)

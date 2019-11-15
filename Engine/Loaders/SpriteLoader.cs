@@ -30,7 +30,10 @@ namespace Engine.Loaders
 
             Texture2D texture = Content.Load<Texture2D>(path);
             error = null;
-            return Content.SpritePacker.TryPack(texture);
+            var packed = Content.SpritePacker.TryPack(texture);
+            if (packed == null)
+                error = "Packing sprite failed. Perhaps atlas is full?";
+            return packed;
         }
     }
 }

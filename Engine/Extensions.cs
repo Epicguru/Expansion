@@ -18,11 +18,15 @@ namespace Engine
 
         public static void Draw(this SpriteBatch spr, Sprite sprite, Vector2 position, Color color, float rotation, Vector2 origin, SpriteEffects effect, float depth)
         {
+            if (sprite == null)
+                throw new System.ArgumentNullException(nameof(sprite));
             spr.Draw(sprite.Texture, new Rectangle(position.ToPoint(), sprite.Bounds.Size), sprite.Bounds, color, rotation, origin, effect, depth);
         }
 
         public static void Draw(this SpriteBatch spr, Sprite sprite, Rectangle position, Color color, float rotation, Vector2 origin, SpriteEffects effect, float depth)
         {
+            if (sprite == null)
+                throw new System.ArgumentNullException(nameof(sprite));
             spr.Draw(sprite.Texture, position, sprite.Bounds, color, rotation, origin, effect, depth);
         }
 
