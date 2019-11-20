@@ -1,6 +1,7 @@
 ﻿using Engine;
 using Engine.Screens;
 using Engine.Sprites;
+using Engine.Threading;
 using Engine.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -43,6 +44,7 @@ namespace Expansion
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
         private TileLayer Layer { get { return JEngine.TileMap; } }
+        private TestWorkerThread Threads;
 
         public BaseScreen() : base("Base Screen")
         {
@@ -51,18 +53,30 @@ namespace Expansion
         public override void Init()
         {
             JEngine.ScreenManager.GetScreen<CameraMoveScreen>().Active = true;
-        }
+            Threads = new TestWorkerThread();
+            Threads.Start();
 
-        public override void LoadContent(Content contentManager)
+            var req = TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 1, 2, 3, 4);
+            req.Cancel();
+            Threads.Post(req);
+            Threads.Post(TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 10, 20, 30, 40));
+            Threads.Post(TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 25, 25, 25));
+            Threads.Post(TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 69));
+        }
+            
+        public override void LoadContent(JContent contentManager)
         {
             TreeLines = contentManager.Load<Sprite>("NewTreeLines");
             TreeColor = contentManager.Load<Sprite>("NewTreeColor");
             NoiseTileSprite = contentManager.Load<Sprite>("TileNoise");
             MissileSprite = contentManager.Load<Sprite>("Missile");
+
             NoiseTileDef = new TileDef(1, "Test Tile");
-            NoiseTileDef.Sprite = NoiseTileSprite;
+            NoiseTileDef.BaseSprite = NoiseTileSprite;
             TileDef.Register(NoiseTileDef);
             TileDef.Register(new TestLinkedTile());
+            TileDef.Register(new TreeTile());
+            TileDef.Register(new WindTurbineTileDef());
         }
 
         private List<long> toBin = new List<long>();
@@ -81,7 +95,7 @@ namespace Expansion
                     e.Center = Input.MouseWorldPos;
                     e.Velocity = Rand.UnitCircle() * Rand.Range(0.25f, 10f) * Tile.SIZE;
                 }
-            }
+            }            
 
             if (Input.KeyPressed(Keys.Y))
             {
@@ -107,10 +121,16 @@ namespace Expansion
                 missile.Position = Input.MouseWorldPos - missile.Size * 0.5f;
             }
 
+            // URGTODO make Input have a mouse world tile value.
+            var p = JEngine.TileMap.PixelToTileCoords((int)Input.MouseWorldPos.X, (int)Input.MouseWorldPos.Y);
             if (Input.KeyPressed(Keys.V))
             {
-                var p = JEngine.TileMap.PixelToTileCoords((int)Input.MouseWorldPos.X, (int)Input.MouseWorldPos.Y);
                 JEngine.TileMap.SetTile(p.X, p.Y, 1, new Tile(2, ColorCache.EnsureColor(Color.White)));
+            }
+
+            if (Input.KeyDown(Keys.B))
+            {
+                Layer.SetTile(p.X, p.Y, 1, new Tile(4, ColorCache.EnsureColor(Color.White)));
             }
 
             if (Input.KeyPressed(Keys.C))
@@ -194,6 +214,8 @@ namespace Expansion
                 Debug.Text($"Widescreen? {item.IsWideScreen}");
                 Debug.Text($"Vendor ID: {item.VendorId}");
             }
+            Debug.Text($"Thread request count: {ThreadedRequest<int[], double>.PooledCount}");
+            Debug.Text($"Thread request count (bad): {ThreadedRequest<bool, double>.PooledCount}");
 
             for (int x = minX; x <= maxX; x++)
             {
@@ -201,7 +223,7 @@ namespace Expansion
                 {
                     if (!Layer.IsChunkLoaded(x, y))
                     {
-                        var loaded = Layer.LoadChunk(x, y);
+                        var loaded = Layer.LoadChunk(x, y, true);
                         loaded.RequestRedraw();
                     }
                     else
@@ -231,6 +253,11 @@ namespace Expansion
         public override void DrawUI(SpriteBatch spr)
         {
             spr.Draw(JEngine.MainAtlas.Texture, new Vector2(10, 10), Color.White);
+        }
+
+        public override void OnClosing()
+        {
+            Threads.Stop();
         }
     }
 }

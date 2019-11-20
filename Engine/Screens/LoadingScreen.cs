@@ -15,7 +15,7 @@ namespace Engine.Screens
             Visible = false;
         }
 
-        public override void LoadContent(Content contentManager)
+        public override void LoadContent(JContent contentManager)
         {
             font = contentManager.Load<SpriteFont>("MediumFont");
 

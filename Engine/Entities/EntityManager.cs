@@ -39,6 +39,15 @@ namespace Engine.Entities
             toAdd.Enqueue(e);
         }
 
+        internal void InstantRegister(Entity e)
+        {
+            // Is this such a good idea? Note to self, this is used for tile entities
+            // that need an ID immediately after spawned.
+            // Might break things, might not. Who knows.
+
+            Register(e);
+        }
+
         private ushort Register(Entity e)
         {
             if(e == null)
@@ -128,6 +137,14 @@ namespace Engine.Entities
             return -1;
         }
 
+        public Entity Get(ushort ID)
+        {
+            if (ID == 0)
+                return null;
+
+            return entities[ID];
+        }
+
         public void UpdateAll()
         {
             // Add in new entities...
@@ -162,7 +179,7 @@ namespace Engine.Entities
                     // Update chunk...
                     var chunk = JEngine.TileMap.GetChunk(coords.X, coords.Y);
                     if (chunk == null)
-                        chunk = JEngine.TileMap.LoadChunk(coords.X, coords.Y);
+                        chunk = JEngine.TileMap.LoadChunk(coords.X, coords.Y, true);
 
                     chunk.entities.Add(e);
                     e.CurrentChunk = chunk;

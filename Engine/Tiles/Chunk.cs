@@ -204,13 +204,52 @@ namespace Engine.Tiles
                     if (n < min)
                         min = n;
 
-                    tiles[GetIndex(x, y, 0)] = new Tile(1, ColorCache.EnsureColor(c)) { HasTree = c == Color.LawnGreen ? Rand.Chance(0.2f) : false };
+                    tiles[GetIndex(x, y, 0)] = new Tile(1, ColorCache.EnsureColor(c));
+                    if(c == Color.LawnGreen || c == Color.SandyBrown)
+                        if(Rand.Chance(0.3f))
+                            tiles[GetIndex(x, y, 1)] = new Tile(3, ColorCache.EnsureColor(Color.White));
+                }
+            }
+        }
+
+        internal void NotifyAllPlaced()
+        {
+            for (int x = 0; x < SIZE; x++)
+            {
+                for (int y = 0; y < SIZE; y++)
+                {
+                    for (int z = 0; z < DEPTH; z++)
+                    {
+                        int index = GetIndex(x, y, z);
+                        Tile t = tiles[index];
+                        if (!t.IsBlank)
+                        {
+                            t.Def.UponPlaced(ref tiles[index], this, x, y, z, true);
+                        }
+                    }
                 }
             }
         }
 
         public void Dispose()
         {
+            if(tiles != null)
+            {
+                for (int x = 0; x < SIZE; x++)
+                {
+                    for (int y = 0; y < SIZE; y++)
+                    {
+                        for (int z = 0; z < DEPTH; z++)
+                        {
+                            int index = GetIndex(x, y, z);
+                            var t = tiles[index];
+                            if(!t.IsBlank)
+                                t.Def.UponRemoved(ref tiles[index], this, x, y, z, true);
+                        }
+                    }
+                }
+            }
+
             if(Graphics != null)
             {
                 Graphics.Dispose();

@@ -91,13 +91,13 @@ namespace Engine
                 vsm = value;
                 switch (value)
                 {
-                    case VSyncMode.DISABLED:
+                    case VSyncMode.Disabled:
                         JEngine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Immediate;
                         break;
-                    case VSyncMode.ENABLED:
+                    case VSyncMode.Enabled:
                         JEngine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.One;
                         break;
-                    case VSyncMode.DOUBLE:
+                    case VSyncMode.Double:
                         JEngine.MainGraphicsDevice.PresentationParameters.PresentationInterval = PresentInterval.Two;
                         break;
                 }
@@ -127,7 +127,7 @@ namespace Engine
         private static double _precisionWait = 0.5;
         private static int cumulativeFrames;
         private static Stopwatch frameTimer = new Stopwatch();
-        private static VSyncMode vsm = VSyncMode.ENABLED;
+        private static VSyncMode vsm = VSyncMode.Enabled;
 
         private static double TargetFramerateInterval()
         {

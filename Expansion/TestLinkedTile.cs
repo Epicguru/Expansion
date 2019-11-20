@@ -9,11 +9,12 @@ namespace Expansion
         public TestLinkedTile() : base(2, "Test Linked")
         {
             base.Sprites = LoadAll("Wall_");
+            base.RedrawRadius = 1;
         }
 
         private Sprite[] LoadAll(string prefix)
         {
-            var c = JEngine.ContentManager;
+            var c = JEngine.JContent;
             Sprite[] spr = new Sprite[16];
             spr[0] = c.Load<Sprite>(prefix + "0000");
             spr[1] = c.Load<Sprite>(prefix + "0001");

@@ -36,7 +36,7 @@ namespace Engine.Tiles
             return IsChunkLoaded(MakeChunkID(chunkX, chunkY));
         }
 
-        public Tile GetTile(int x, int y, int z, bool load)
+        public Tile GetTile(int x, int y, int z, bool load = false, bool redrawIfLoad = false)
         {
             var cp = TileToChunkCoords(x, y);
             Chunk c = GetChunk(cp);
@@ -44,7 +44,7 @@ namespace Engine.Tiles
             if (c == null)
             {
                 if (load)
-                    c = LoadChunk(cp.X, cp.Y);
+                    c = LoadChunk(cp.X, cp.Y, redrawIfLoad);
                 else
                     return new Tile(0, 0);
             }
@@ -76,7 +76,7 @@ namespace Engine.Tiles
             return new Chunk(cx, cy);            
         }
 
-        public void SetTile(int x, int y, int z, Tile tile)
+        public Tile SetTile(int x, int y, int z, Tile tile, bool redrawSurroundings = true)
         {
             Point chunkCoords = TileToChunkCoords(x, y);
             long id = MakeChunkID(chunkCoords.X, chunkCoords.Y);
@@ -86,14 +86,14 @@ namespace Engine.Tiles
             {
                 if (AutoLoadChunks)
                 {
-                    c = LoadChunk(id);
+                    c = LoadChunk(id, redrawSurroundings);
                     //Debug.Trace($"Auto-loaded chunk {chunkCoords.X}, {chunkCoords.Y}");
                 }
                 else
                 {
                     Debug.Error($"Tried to set tile {tile} at world coords ({x}, {y}) but the corresponding chunk ({chunkCoords.X}, {chunkCoords.Y} [{id}]) is not loaded." +
                         $" Check if chunks are loaded or set TileLayer.AutoLoadChunks to true.");
-                    return;
+                    return Tile.Blank;
                 }
             }
             else
@@ -104,7 +104,38 @@ namespace Engine.Tiles
             int localX = x - c.X * Chunk.SIZE;
             int localY = y - c.Y * Chunk.SIZE;
 
+            Tile current = c.GetTileFast(localX, localY, z);
+            if (!current.IsBlank)
+            {
+                current.Def.UponRemoved(ref current, c, localY, localY, z, false);
+            }
+
+            if (!tile.IsBlank)
+            {
+                int r = tile.Def.RedrawRadius;
+                if(r != 0)
+                {
+                    bool updateLeft = localX < r;
+                    bool updateTop = localY < r;
+                    bool updateRight = localX >= Chunk.SIZE - r;
+                    bool updateBottom = localY >= Chunk.SIZE - r;
+
+                    if (updateLeft)
+                        GetChunk(c.X - 1, c.Y)?.RequestRedraw();
+                    if (updateRight)
+                        GetChunk(c.X + 1, c.Y)?.RequestRedraw();
+                    if (updateBottom)
+                        GetChunk(c.X, c.Y + 1)?.RequestRedraw();
+                    if(updateTop)
+                        GetChunk(c.X, c.Y - 1)?.RequestRedraw();
+                }
+
+                // Notify tile def of placement.
+                tile.Def.UponPlaced(ref tile, c, localX, localY, z, false);
+            }           
+
             c.SetTile(localX, localY, z, tile);
+            return tile;
         }
 
         public Point TileToChunkCoords(Point tilePos)
@@ -127,7 +158,7 @@ namespace Engine.Tiles
             return new Point((int)Math.Floor((float)px / Tile.SIZE), (int)Math.Floor((float)py / Tile.SIZE));
         }
 
-        public Chunk LoadChunk(long chunkID)
+        public Chunk LoadChunk(long chunkID, bool redrawSurroundings)
         {
             if(IsChunkLoaded(chunkID))
             {
@@ -146,12 +177,29 @@ namespace Engine.Tiles
             Debug.Assert(chunk.ID == chunkID, "Chunk ID not as expected or specified!");
             loadedChunks.Add(chunk.ID, chunk);
 
+            if (redrawSurroundings)
+            {
+                // Redraw chunks around it.
+                GetChunk(coords.X - 1, coords.Y)?.RequestRedraw();
+                GetChunk(coords.X + 1, coords.Y)?.RequestRedraw();
+
+                GetChunk(coords.X, coords.Y + 1)?.RequestRedraw();
+                GetChunk(coords.X, coords.Y - 1)?.RequestRedraw();
+
+                GetChunk(coords.X + 1, coords.Y - 1)?.RequestRedraw();
+                GetChunk(coords.X - 1, coords.Y - 1)?.RequestRedraw();
+                GetChunk(coords.X + 1, coords.Y + 1)?.RequestRedraw();
+                GetChunk(coords.X - 1, coords.Y + 1)?.RequestRedraw();
+            }
+
+            chunk.NotifyAllPlaced();
+
             return chunk;
         }
 
-        public Chunk LoadChunk(int x, int y)
+        public Chunk LoadChunk(int x, int y, bool redrawSurroudings)
         {
-            return LoadChunk(MakeChunkID(x, y));
+            return LoadChunk(MakeChunkID(x, y), redrawSurroudings);
         }
 
         public void UnloadChunk(long chunkID)
@@ -165,9 +213,7 @@ namespace Engine.Tiles
             var chunk = loadedChunks[chunkID];
             loadedChunks.Remove(chunkID);
             chunk.Dispose();
-            // URGTODO pool textures.
-            //var coords = MakeChunkCoords(chunkID);
-            //Debug.Trace($"Unloaded {coords.X}, {coords.Y}");
+            // TODO pool textures.
         }
 
         public long MakeChunkID(int x, int y)

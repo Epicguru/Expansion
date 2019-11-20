@@ -8,7 +8,7 @@ namespace Expansion
     {
         public NoisyTile(Sprite spr) : base(1, "Test Noisy Tile")
         {
-            base.Sprite = spr;
+            base.BaseSprite = spr;
         }
     }
 }

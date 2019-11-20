@@ -32,6 +32,7 @@ namespace Engine.Sprites
                 _bounds = value;
             }
         }
+        public Vector2 BoundsCenter { get { return Bounds.Center.ToVector2(); } }
 
         private Rectangle _bounds;
         public int Width { get { return Bounds.Width; } }

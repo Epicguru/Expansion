@@ -40,7 +40,15 @@ namespace Engine.Tiles
         public const int SIZE = 32;
         public byte ID { get; }
         public string Name { get; protected set; }
-        public Sprite Sprite; // TODO add sprite variants, corners, backgrounds etc.
+        /// <summary>
+        /// Default value 0.
+        /// Gets or sets the radius, in tiles, in which placement or removal of this tile will result in a
+        /// chunk redraw. For example, when set to zero (default) then when this tile updates only the chunk that it
+        /// is in is redrawn. When set to 1, if the tile is on the edge of the chunk the neighbouring chunk is also redrawn.
+        /// If set to 2, if the tile is on the edge or 1 tile away from the edge the neighbouring chunk is also redrawn.
+        /// </summary>
+        public byte RedrawRadius { get; protected set; } = 0;
+        public Sprite BaseSprite;
 
         public TileDef(byte id, string name)
         {
@@ -50,11 +58,18 @@ namespace Engine.Tiles
 
         public virtual void Draw(SpriteBatch spr, Tile tile, Chunk chunk, int localX, int localY, int z)
         {
-            spr.Draw(Sprite, new Rectangle(localX * SIZE, localY * SIZE, SIZE, SIZE), ColorCache.GetColor(tile.ColorRef));
-            if (tile.HasTree)
-            {
-                spr.Draw(JEngine.Pixel, new Rectangle(localX * SIZE + SIZE / 2 - 16 / 2, localY * SIZE + SIZE / 2 - 24, 16, 24), Color.OliveDrab);
-            }
+            if(BaseSprite != null)
+                spr.Draw(BaseSprite, new Rectangle(localX * SIZE, localY * SIZE, SIZE, SIZE), ColorCache.GetColor(tile.ColorRef));
+        }
+
+        public virtual void UponPlaced(ref Tile tile, Chunk c, int localX, int localY, int z, bool fromLoad)
+        {
+
+        }
+
+        public virtual void UponRemoved(ref Tile oldTile, Chunk c, int localX, int localY, int z, bool fromUnload)
+        {
+
         }
     }
 }

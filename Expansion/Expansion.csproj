@@ -34,6 +34,7 @@
     <DefineConstants>TRACE;WINDOWS</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>
@@ -51,6 +52,11 @@
     <Compile Include="TestActive.cs" />
     <Compile Include="TestEntity.cs" />
     <Compile Include="TestLinkedTile.cs" />
+    <Compile Include="TestRequest.cs" />
+    <Compile Include="TestWorkerThread.cs" />
+    <Compile Include="TreeTile.cs" />
+    <Compile Include="WindTurbine.cs" />
+    <Compile Include="WindTurbineTileDef.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="MonoGame.Framework">

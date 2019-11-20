@@ -99,7 +99,7 @@ namespace Engine.Screens
             }
         }
 
-        public void LoadContent(Content contentManager)
+        public void LoadContent(JContent contentManager)
         {
             foreach (var scr in allScreens)
             {
@@ -174,6 +174,14 @@ namespace Engine.Screens
                     Debug.Error($"Exception drawing UI for screen {scr.Name} ({scr.ID}).", e);
                 }
 #endif
+            }
+        }
+
+        public void OnClose()
+        {
+            foreach (var screen in allScreens)
+            {
+                screen?.OnClosing();
             }
         }
 

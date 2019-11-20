@@ -5,6 +5,10 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace Engine.Entities
 {
+    /// <summary>
+    /// An entity is a object that exists within the game world that recieves an update every frame.
+    /// All entities have position and size.
+    /// </summary>
     public abstract class Entity
     {
         public string Name { get; protected set; }
@@ -35,6 +39,17 @@ namespace Engine.Entities
             Register(JEngine.Entities);
         }
 
+        internal void InstantRegister()
+        {
+            if (ID != 0)
+            {
+                Debug.Warn($"ID for this entity {Name} is {ID}, already registered somewhere!");
+                return;
+            }
+
+            JEngine.Entities.InstantRegister(this);
+        }
+
         protected void Register(EntityManager em)
         {
             if(ID != 0)
@@ -51,6 +66,10 @@ namespace Engine.Entities
             em.StartRegister(this);
         }
 
+        /// <summary>
+        /// Call to destroy this entity, removing it from the simulation and game world.
+        /// Can be overriden to prevent destruction.
+        /// </summary>
         public virtual void Destroy()
         {
             RemovePending = true;

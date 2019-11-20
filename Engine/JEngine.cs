@@ -1,6 +1,6 @@
 ﻿
+using Engine.ContentLoaders;
 using Engine.Entities;
-using Engine.Loaders;
 using Engine.Packer;
 using Engine.Screens;
 using Engine.Sprites;
@@ -22,7 +22,7 @@ namespace Engine
         public static GraphicsDevice MainGraphicsDevice { get; private set; }
         public static GraphicsDeviceManager GraphicsDeviceManager { get; private set; }
         public static SpriteBatch MainSpriteBatch { get; private set; }
-        public static Content ContentManager { get; private set; }
+        public static JContent JContent { get; private set; }
         public static ContentManager XNAContent { get; private set; }
         public static readonly Camera Camera = new Camera();
         public static Color BackgroundColor = Color.CornflowerBlue;
@@ -32,9 +32,9 @@ namespace Engine
         public static SpriteAtlas MainAtlas { get; private set; }
         public static Sprite Pixel { get; private set; }
 
-        public static Action<Content> UponRegisterContentLoaders;
+        public static Action<JContent> UponRegisterContentLoaders;
         public static Action<ScreenManager> UponRegisterScreens;
-        public static Action<Content> UponLoadContent;
+        public static Action<JContent> UponLoadContent;
 
         private static FixedSizeSpritePacker packer;
         private static readonly ConcurrentQueue<Action> pendingThreadActions = new ConcurrentQueue<Action>();
@@ -98,11 +98,11 @@ namespace Engine
             Window.AllowUserResizing = true;
             
             Debug.Init();
-            ContentManager = new Content();
-            ContentManager.RegisterLoader(new TextureLoader());
-            ContentManager.RegisterLoader(new FontLoader());
-            ContentManager.RegisterLoader(new SpriteLoader());
-            UponRegisterContentLoaders?.Invoke(ContentManager);
+            JContent = new JContent();
+            JContent.RegisterLoader(new TextureLoader());
+            JContent.RegisterLoader(new FontLoader());
+            JContent.RegisterLoader(new SpriteLoader());
+            UponRegisterContentLoaders?.Invoke(JContent);
 
             ScreenManager = new ScreenManager();
             ScreenManager.RegisterNew(new CameraMoveScreen()).Active = false;
@@ -128,16 +128,16 @@ namespace Engine
 
             // Create the main atlas packer.
             packer = new FixedSizeSpritePacker(1024, 1024, 1);
-            ContentManager.SpritePacker = packer;
+            JContent.Packer = packer;
 
-            UponLoadContent?.Invoke(ContentManager);
-            ScreenManager.LoadContent(ContentManager);
+            UponLoadContent?.Invoke(JContent);
+            ScreenManager.LoadContent(JContent);
             var pixel = new Texture2D(GraphicsDevice, 3, 3, false, SurfaceFormat.Color);
             pixel.SetData(new Color[9] { Color.White, Color.White, Color.White, Color.White, Color.White, Color.White, Color.White, Color.White, Color.White });
             Pixel = packer.TryPack(pixel, "White Pixel");
 
             MainAtlas = packer.CreateSpriteAtlas(true);
-            ContentManager.SpritePacker = null;
+            JContent.Packer = null;
             packer.Dispose();
             packer = null;
 
@@ -154,7 +154,10 @@ namespace Engine
 
         protected override void EndRun()
         {
+            // TODO loads more stuff needs disposing (or do they...)
+
             base.EndRun();
+            ScreenManager.OnClose();
             Loop.StopAndWait();
         }
 

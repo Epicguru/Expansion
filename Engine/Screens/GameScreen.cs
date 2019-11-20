@@ -55,8 +55,8 @@ namespace Engine.Screens
         /// or related components need. Only called if the screen is registered early in startup!
         /// Default implementation does nothing.
         /// </summary>
-        /// <param name="contentManager">The default content manager that you can load content with.</param>
-        public virtual void LoadContent(Content contentManager)
+        /// <param name="content">The default content manager that you can load content with.</param>
+        public virtual void LoadContent(JContent content)
         {
 
         }
@@ -190,6 +190,14 @@ namespace Engine.Screens
         }
 
         public virtual void OnDisabled()
+        {
+
+        }
+
+        /// <summary>
+        /// Called when the game is closing.
+        /// </summary>
+        public virtual void OnClosing()
         {
 
         }

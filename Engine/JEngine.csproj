@@ -36,6 +36,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <LangVersion>7.2</LangVersion>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationIcon>Icon.ico</ApplicationIcon>
@@ -47,12 +48,16 @@
   <ItemGroup>
     <Compile Include="Bounds.cs" />
     <Compile Include="Camera.cs" />
-    <Compile Include="Content.cs" />
-    <Compile Include="ContentLoader.cs" />
+    <Compile Include="ContentLoaders\ContentLoader.cs" />
+    <Compile Include="ContentLoaders\FontLoader.cs" />
+    <Compile Include="ContentLoaders\SpriteLoader.cs" />
+    <Compile Include="ContentLoaders\TextureLoader.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Entities\ActiveEntity.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityManager.cs" />
+    <Compile Include="Entities\TileEntity.cs" />
+    <Compile Include="JContent.cs" />
     <Compile Include="JEngine.cs" />
     <Compile Include="GUI\UIFlow.cs" />
     <Compile Include="GUI\UILayout.cs" />
@@ -60,9 +65,6 @@
     <Compile Include="GUI\UIStack.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="IO\GameIO.cs" />
-    <Compile Include="Loaders\FontLoader.cs" />
-    <Compile Include="Loaders\SpriteLoader.cs" />
-    <Compile Include="Loaders\TextureLoader.cs" />
     <Compile Include="Loop.cs" />
     <Compile Include="MathUtils\Noise.cs" />
     <Compile Include="Packer\SpriteAtlas.cs" />
@@ -80,9 +82,13 @@
     <Compile Include="Sprites\NinePatch.cs" />
     <Compile Include="Sprites\Sprite.cs" />
     <Compile Include="Sprites\SpriteException.cs" />
+    <Compile Include="Threading\IThreadProcessor.cs" />
+    <Compile Include="Threading\ThreadCallbackManager.cs" />
+    <Compile Include="Threading\ThreadedRequest.cs" />
     <Compile Include="Tiles\Chunk.cs" />
     <Compile Include="Tiles\ChunkGraphics.cs" />
     <Compile Include="Tiles\ColorCache.cs" />
+    <Compile Include="Tiles\EntityTileDef.cs" />
     <Compile Include="Tiles\LinkedTile.cs" />
     <Compile Include="Tiles\Tile.cs" />
     <Compile Include="Tiles\TileDef.cs" />
