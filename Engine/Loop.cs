@@ -1,6 +1,7 @@
 ﻿using Engine.GUI;
 using Engine.Screens;
 using Engine.Tiles;
+using GeonBit.UI;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -335,6 +336,10 @@ namespace Engine
             Debug.DrawUI(spr);
 
             spr.End();
+
+            // Draw the ECS UI.
+            UserInterface.Active.Draw(spr);
+
             InUIDraw = false;
 
             Statistics.RenderTargetDraws = GameScreen.RTDrawCount;

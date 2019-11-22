@@ -1,13 +1,15 @@
 ﻿using Engine.Entities;
+using Engine.IO;
 using Engine.MathUtils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace Engine.Tiles
 {
-    public class Chunk : IDisposable
+    public class Chunk : IDisposable, ISerialized
     {
         public static int TotalCount { get; private set; }
         /// <summary>
@@ -264,6 +266,38 @@ namespace Engine.Tiles
             }
             entities?.Clear();
             entities = null;
+        }
+
+        public void Serialize(IOWriter writer, bool forLoad)
+        {
+            // Don't save the terrain layer, there is no point.
+            // Save Z layers, using run length encoding
+            ushort lastID = 0;
+            byte lastColorID = 0;
+            ushort currentCount = 0;
+            for (int z = 1; z < DEPTH; z++)
+            {
+                for (int x = 0; x < SIZE; x++)
+                {
+                    for (int y = 0; y < SIZE; y++)
+                    {
+                        int index = GetIndex(x, y, z);
+                        Tile t = tiles[index];
+                        bool needsNew = t.ID != lastID || lastColorID != t.ColorRef;
+                        if (t.EntityID != 0)
+                            needsNew = true;
+
+                        lastID = t.ID;
+                        lastColorID = t.ColorRef;
+                        // URGTODO left off here.
+                    }
+                }
+            }
+        }
+
+        public void Deserialize(IOReader reader)
+        {
+            reader.read
         }
     }
 }

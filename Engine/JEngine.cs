@@ -5,6 +5,8 @@ using Engine.Packer;
 using Engine.Screens;
 using Engine.Sprites;
 using Engine.Tiles;
+using GeonBit.UI;
+using GeonBit.UI.Entities;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -114,9 +116,68 @@ namespace Engine
             Entities = new EntityManager();
             TileMap = new TileLayer();
 
-            ScreenManager.Initialize();
+            ScreenManager.Initialize();           
 
             base.Initialize();
+        }
+
+        private void InitUI()
+        {
+            UserInterface.Initialize(XNAContent, BuiltinThemes.editor);
+            UserInterface.Active.ShowCursor = false;
+
+            return;
+
+            var realPanel = new Panel(new Vector2(500, 650));
+            realPanel.Draggable = true;
+            var tabs = new PanelTabs();
+            realPanel.AddChild(tabs);
+            var MainPanel = tabs.AddTab("Some Tab").panel;
+            var tab2 = tabs.AddTab("Some Other Tab");
+            //tab2.button.Enabled = false;
+            tab2.button.ToolTipText = "This is tab 2.";
+            tab2.panel.AddChild(new TextInput() { CharactersLimit = 16 });
+
+            UserInterface.Active.AddEntity(realPanel);
+
+            MainPanel.AddChild(new Header("Some Header Text"));
+            MainPanel.AddChild(new HorizontalLine());
+            MainPanel.AddChild(new Paragraph("This is a UI test."));
+            var b = new Button("This is a button!");
+            b.ToolTipText = "Some tooltip!";
+            MainPanel.AddChild(b);
+            MainPanel.AddChild(new Slider(0, 100, SliderSkin.Default) { Enabled = false });
+            var toggle = new GeonBit.UI.Entities.CheckBox("Some Check", Anchor.Auto);
+            MainPanel.AddChild(toggle);
+
+            var test = new Panel(new Vector2(300, 140), PanelSkin.Fancy, Anchor.AutoInline);
+            test.AddChild(new Label("I am a label"));
+            test.AddChild(new CheckBox("I'm a box"));
+            test.AdjustHeightAutomatically = true;
+            MainPanel.AddChild(test);
+            
+            var list = new SelectList();
+            list.AddItem("Option A");
+            list.AddItem("Option B");
+            list.AddItem("Option C");
+            list.SetHeightBasedOnChildren();
+            var drop = new DropDown();
+            drop.AddItem("Something A");
+            drop.AddItem("Something B");
+            drop.AddItem("Something C");
+            MainPanel.AddChild(drop);
+
+            var pan2 = new Panel();
+            pan2.AddChild(new Header("Some sub-panel"));
+            pan2.AddChild(new CheckBox("Cool?") { OnValueChange = (e) => { Debug.Log((e as CheckBox).Checked.ToString()); } });
+            tab2.panel.AddChild(pan2, true);
+            //pan2.Anchor = Anchor.AutoInline;
+            Debug.Log(MainPanel.Padding.ToString());
+
+            MainPanel.AddChild(list);
+
+            MainPanel.Padding = new Vector2(10, 5);
+            MainPanel.SetHeightBasedOnChildren();
         }
 
         protected override void LoadContent()
@@ -144,6 +205,9 @@ namespace Engine
             Debug.Log("After all screens loaded content, the main atlas has been created!");
             Debug.Log("Main Atlas: " + MainAtlas);
 
+            InitUI();
+            Debug.Log("Initialized UI engine.");
+
             Loop.Start();
         }
 
@@ -169,6 +233,7 @@ namespace Engine
 
         internal static void EngineUpdate()
         {
+            UserInterface.Active.Update(new GameTime(TimeSpan.FromSeconds(Time.unscaledTime), TimeSpan.FromSeconds(Time.unscaledDeltaTime)));
             ScreenManager.Update();
             Entities.UpdateAll();
         }
@@ -181,7 +246,7 @@ namespace Engine
 
         internal static void EngineDrawUI()
         {
-            ScreenManager.DrawUI(MainSpriteBatch);
+            ScreenManager.DrawUI(MainSpriteBatch);            
         }
     }
 }
