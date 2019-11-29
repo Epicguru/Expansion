@@ -1,5 +1,7 @@
-﻿using Engine.Tiles;
+﻿using Engine.IO;
+using Engine.Tiles;
 using Microsoft.Xna.Framework;
+using System.IO;
 
 namespace Engine.Entities
 {
@@ -15,6 +17,11 @@ namespace Engine.Entities
     {
         public int TileX, TileY, TileZ;
 
+        public TileEntity() : base(null, false)
+        {
+
+        }
+
         public TileEntity(string name, int x, int y, int z) : base(name, false)
         {
             TileX = x;
@@ -25,6 +32,26 @@ namespace Engine.Entities
 
             // Needs to be instantly registered to get an ID.
             base.InstantRegister();
+        }
+
+        public override void Serialize(IOWriter writer)
+        {
+            base.Serialize(writer);
+
+            // Write tile positions.
+            writer.Write(TileX);
+            writer.Write(TileY);
+            writer.Write(TileZ);
+        }
+
+        public override void Deserialize(IOReader reader)
+        {
+            base.Deserialize(reader);
+
+            // Read tile positions.
+            TileX = reader.ReadInt32();
+            TileY = reader.ReadInt32();
+            TileZ = reader.ReadInt32();
         }
 
         public override void Destroy()

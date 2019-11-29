@@ -268,36 +268,75 @@ namespace Engine.Tiles
             entities = null;
         }
 
-        public void Serialize(IOWriter writer, bool forLoad)
+        public void Serialize(IOWriter writer)
         {
             // Don't save the terrain layer, there is no point.
-            // Save Z layers, using run length encoding
-            ushort lastID = 0;
-            byte lastColorID = 0;
-            ushort currentCount = 0;
-            for (int z = 1; z < DEPTH; z++)
-            {
-                for (int x = 0; x < SIZE; x++)
-                {
-                    for (int y = 0; y < SIZE; y++)
-                    {
-                        int index = GetIndex(x, y, z);
-                        Tile t = tiles[index];
-                        bool needsNew = t.ID != lastID || lastColorID != t.ColorRef;
-                        if (t.EntityID != 0)
-                            needsNew = true;
+            // Save Z layers, using run length encoding (TODO)
 
-                        lastID = t.ID;
-                        lastColorID = t.ColorRef;
-                        // URGTODO left off here.
-                    }
-                }
+            // Compresses using run length encoding (obviously has to be lossless).
+            // Compressed in vertical strips due to data structure indexing.
+            Tile[] toSave = new Tile[tiles.Length - SIZE * SIZE];
+            Array.Copy(tiles, SIZE * SIZE, toSave, 0, toSave.Length);
+            var compressed = RLE.Compress<Tile>(toSave, (current, next) =>
+            {
+                return current.ID == next.ID && current.ColorRef == next.ColorRef && next.EntityID == 0;
+            }, out int squased);
+            Debug.Log($"Squshed {squased} of {tiles.Length} tiles, that's {((float)squased / (tiles.Length - SIZE * SIZE))*100f:F1}%. Segments: {compressed.Count}.");
+
+            // Write total segment count.
+            writer.Write((ushort)compressed.Count);
+
+            // Write compressed data.
+            foreach (var pair in compressed)
+            {
+                writer.Write((ushort)pair.count);
+                writer.Write(pair.data.ID);
+                writer.Write(pair.data.ColorRef);
+                writer.Write(pair.data.EntityID);
             }
         }
 
         public void Deserialize(IOReader reader)
         {
-            reader.read
+            // Read segment count.
+            ushort segments = reader.ReadUInt16();
+            Debug.Log($"Reading {segments} segments...");
+
+            (int count, Tile tile)[] compressed = new(int, Tile)[segments];
+
+            // Load compressed data.
+            for (int i = 0; i < segments; i++)
+            {
+                ushort count = reader.ReadUInt16();
+                byte tileID = reader.ReadByte();
+                byte colorRef = reader.ReadByte();
+                ushort entityID = reader.ReadUInt16();
+
+                Tile tile = new Tile(tileID, colorRef);
+                tile.EntityID = entityID;
+
+                compressed[i] = (count, tile);
+            }
+
+            // Decompress data.
+            var decompressed = RLE.Decompress<Tile>(compressed);
+            Debug.Log($"Decompressed into {decompressed.Count} tiles, expected {SIZE * SIZE * (DEPTH - 1)}.");
+
+            // Write decompressed into tile array.
+            for (int x = 0; x < SIZE; x++)
+            {
+                for (int y = 0; y < SIZE; y++)
+                {
+                    for (int z = 1; z < DEPTH; z++)
+                    {
+                        int index = GetIndex(x, y, z);
+                        tiles[index] = decompressed[index - SIZE * SIZE];
+                    }
+                }
+            }
+
+            // Tiles have been updated. Redraw!
+            RequestRedraw();
         }
     }
 }

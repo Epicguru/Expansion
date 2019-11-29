@@ -9,6 +9,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 
 /*
@@ -96,7 +97,31 @@ namespace Expansion
                     e.Center = Input.MouseWorldPos;
                     e.Velocity = Rand.UnitCircle() * Rand.Range(0.25f, 10f) * Tile.SIZE;
                 }
-            }            
+            }
+
+            if (Input.KeyDown(Keys.M))
+            {
+                using(FileStream fs = new FileStream(@"C:\Users\James.000\Desktop\Chunk.txt", FileMode.Create, FileAccess.Write))
+                {
+                    using (IOWriter w = new IOWriter(fs))
+                    {
+                        Layer.GetChunk(0, 0).Serialize(w);
+                        Debug.Log($"Written {w.Length} bytes.");
+                    }
+                }                
+            }
+
+            if (Input.KeyDown(Keys.N))
+            {
+                using (FileStream fs = new FileStream(@"C:\Users\James.000\Desktop\Chunk.txt", FileMode.OpenOrCreate, FileAccess.Read))
+                {
+                    using (IOReader r = new IOReader(fs))
+                    {
+                        Layer.GetChunk(0, 0).Deserialize(r);
+                        Debug.Log($"Read {r.Length} bytes.");
+                    }
+                }
+            }
 
             if (Input.KeyPressed(Keys.Y))
             {

@@ -1,5 +1,6 @@
 ﻿using Engine;
 using Engine.Entities;
+using Engine.IO;
 using Microsoft.Xna.Framework;
 
 namespace Expansion
@@ -17,6 +18,20 @@ namespace Expansion
         public override void Update()
         {
             Position += Velocity * Time.deltaTime;
+        }
+
+        public override void Serialize(IOWriter writer)
+        {
+            base.Serialize(writer);
+
+            writer.Write(Velocity);
+        }
+
+        public override void Deserialize(IOReader reader)
+        {
+            base.Deserialize(reader);
+
+            Velocity = reader.ReadVector2();
         }
     }
 }

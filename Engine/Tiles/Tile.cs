@@ -1,4 +1,5 @@
 ﻿using Engine.Entities;
+using Engine.IO;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace Engine.Tiles
@@ -14,6 +15,16 @@ namespace Engine.Tiles
         public bool IsBlank { get { return ID == 0; } }
         public byte ID { get; }
         public byte ColorRef { get; set; }
+        public string Name
+        {
+            get
+            {
+                if (IsBlank)
+                    return "Blank";
+                else
+                    return Def.Name;
+            }
+        }
         public TileDef Def { get { return TileDef.Get(ID); } }
         public ushort EntityID;
         public TileEntity Entity { get { return JEngine.Entities.Get(EntityID) as TileEntity; } }
@@ -28,6 +39,11 @@ namespace Engine.Tiles
         public void Draw(SpriteBatch spr, Chunk chunk, int localX, int localY, int z)
         {
             Def.Draw(spr, this, chunk, localX, localY, z);
+        }
+
+        public override string ToString()
+        {
+            return $"ID: {ID} ({(ID == 0 ? "air" : Def.Name)}){(EntityID == 0 ? "" : ", Entity: " + Entity?.Name ?? "null" + $" ({Entity?.GetType().FullName ?? "null"})")}";
         }
     }
 }

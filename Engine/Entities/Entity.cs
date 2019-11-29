@@ -1,21 +1,25 @@
 ﻿
+using Engine.IO;
 using Engine.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System.IO;
 
 namespace Engine.Entities
 {
     /// <summary>
     /// An entity is a object that exists within the game world that recieves an update every frame.
     /// All entities have position and size.
+    /// Remember, when inheriting from  this class you MUST have a no-parameter constructor. Otherwise
+    /// the IO system will not be able to save and load your entity.
     /// </summary>
-    public abstract class Entity
+    public abstract class Entity : ISerialized
     {
         public string Name { get; protected set; }
         public Vector2 Position = Vector2.Zero;
         public Vector2 Center { get { return Bounds.Center; } set { Position = value - Size * 0.5f; } }
         public Vector2 Size = new Vector2(32, 32);
-        public Bounds Bounds { get { return new Bounds(Position, Size); } }
+        public Bounds Bounds { get { return new Bounds(Position, Size); } set { Position = value.Pos; Size = value.Size; } }
         public ushort ID { get; internal set; }
         public EntityCullingMode CullingMode { get; set; } = EntityCullingMode.Chunk;
         public bool AreBoundsOnScreen { get { return JEngine.Camera.WorldViewBounds.ToBounds().Overlaps(Bounds); } }
@@ -107,6 +111,31 @@ namespace Engine.Entities
                 else
                     return (int)(x - 0.9999f);
             }
+        }
+
+        /// <summary>
+        /// Called when the entity is being saved to disk.
+        /// Override this to write all data that you want to save. Data must be written and read in the
+        /// same order.
+        /// This default implementation writes name and bounds, so it is important to still call it when overriding in a custom class.
+        /// </summary>
+        /// <param name="writer">The BinaryWriter to write data with. Import Engine.IO for many useful extension methods (such as writing Vector2).</param>
+        public virtual void Serialize(IOWriter writer)
+        {
+            writer.Write(Name);
+            writer.Write(Bounds);
+        }
+
+        /// <summary>
+        /// Called when the entity is being loaded from disk.
+        /// Override this to read any data that you saved when overriding the <see cref="Serialize(BinaryWriter)"/>
+        /// method. Data must be written and read in the same order.
+        /// </summary>
+        /// <param name="reader"></param>
+        public virtual void Deserialize(IOReader reader)
+        {
+            Name = reader.ReadString();
+            Bounds = reader.ReadBounds();
         }
     }
 
