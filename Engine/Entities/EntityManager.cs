@@ -1,8 +1,10 @@
 ﻿
+using Engine.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Engine.Entities
 {
@@ -264,12 +266,88 @@ namespace Engine.Entities
             }
         }
 
-        public void Dispose()
+        public void SerializeAll(IOWriter writer)
         {
-            while(EntityCount != 0)
+            // First of all, compress names to ushorts using a map.
+            Dictionary<Type, (string name, ushort id)> map = new Dictionary<Type, (string, ushort)>();
+            ushort id = 0;
+            foreach (var e in allEntities)
+            {
+                Type t = e.GetType();
+                if (!map.ContainsKey(t))
+                {
+                    map.Add(t, (t.AssemblyQualifiedName, id));
+                    id++;
+                }
+            }
+
+            // Write map...
+            writer.Write(map.Count);
+            foreach (var pair in map)
+            {
+                writer.Write(pair.Value.name);
+            }
+
+            writer.Write(allEntities.Count);
+            foreach (var e in allEntities)
+            {
+                writer.Write(map[e.GetType()].id);
+                writer.Write(e);
+            }
+        }
+
+        public void DeserializeAllNew(IOReader reader)
+        {
+            ClearEntities();
+
+            // Read name map...
+            Type[] blankParams = new Type[0];
+            object[] blankArgs = new object[0];
+            int count = reader.ReadInt32();
+            Type[] types = new Type[count];
+            ConstructorInfo[] constructors = new ConstructorInfo[count];
+            for (int i = 0; i < count; i++)
+            {
+                string typeName = reader.ReadString();
+
+                Type t = Type.GetType(typeName, false, false);
+                if (t == null)
+                    throw new Exception($"Entity of type {typeName} could not be found, so cannot be loaded from disk! Reading cannot continue because data length is unknown.");
+
+                var constructor = t.GetConstructor(blankParams);
+                if (constructor == null)
+                    throw new Exception($"Entity of type {typeName} does not have a no-parameter constructor, so cannot be loaded. Reading cannot continue since data length is unknown.");
+                types[i] = t;
+                constructors[i] = constructor;
+            }
+
+            
+
+            count = reader.ReadInt32();
+            for (int i = 0; i < count; i++)
+            {
+                ushort typeMapIndex = reader.ReadUInt16();
+                var constructor = constructors[typeMapIndex];
+
+                var obj = constructor.Invoke(blankArgs);
+
+                // No need to register: Entities should auto register, especially since the default constructor is being used.
+                Entity e = obj as Entity;
+                e.Deserialize(reader);
+            }
+        }
+
+        public void ClearEntities()
+        {
+            while (EntityCount != 0)
             {
                 Unregister(allEntities[0]);
             }
+        }
+
+        public void Dispose()
+        {
+            ClearEntities();
 
             entities = null;
             allEntities?.Clear();

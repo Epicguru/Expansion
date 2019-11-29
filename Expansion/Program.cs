@@ -111,6 +111,30 @@ namespace Expansion
                 }                
             }
 
+            if (Input.KeyDown(Keys.NumPad0))
+            {
+                using (FileStream fs = new FileStream(@"C:\Users\James.000\Desktop\Entities.txt", FileMode.Create, FileAccess.Write))
+                {
+                    using (IOWriter w = new IOWriter(fs))
+                    {
+                        JEngine.Entities.SerializeAll(w);
+                        Debug.Log($"Written {w.Length} bytes for entities.");
+                    }
+                }
+            }
+
+            if (Input.KeyDown(Keys.NumPad1))
+            {
+                using (FileStream fs = new FileStream(@"C:\Users\James.000\Desktop\Entities.txt", FileMode.Open, FileAccess.Read))
+                {
+                    using (IOReader w = new IOReader(fs))
+                    {
+                        JEngine.Entities.DeserializeAllNew(w);
+                        Debug.Log($"Read {w.Length} bytes for entities.");
+                    }
+                }
+            }
+
             if (Input.KeyDown(Keys.N))
             {
                 using (FileStream fs = new FileStream(@"C:\Users\James.000\Desktop\Chunk.txt", FileMode.OpenOrCreate, FileAccess.Read))

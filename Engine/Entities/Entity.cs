@@ -26,6 +26,7 @@ namespace Engine.Entities
         public Chunk CurrentChunk { get; internal set; }
         public bool DoChunkParenting { get; protected set; } = true;
         public bool IsDestroyed { get; internal set; }
+        protected bool SerializeName { get; set; } = true;
 
         internal bool RemovePending { get; set; }
 
@@ -122,7 +123,8 @@ namespace Engine.Entities
         /// <param name="writer">The BinaryWriter to write data with. Import Engine.IO for many useful extension methods (such as writing Vector2).</param>
         public virtual void Serialize(IOWriter writer)
         {
-            writer.Write(Name);
+            if(SerializeName)
+                writer.Write(Name);
             writer.Write(Bounds);
         }
 
@@ -134,7 +136,8 @@ namespace Engine.Entities
         /// <param name="reader"></param>
         public virtual void Deserialize(IOReader reader)
         {
-            Name = reader.ReadString();
+            if(SerializeName)
+                Name = reader.ReadString();
             Bounds = reader.ReadBounds();
         }
     }

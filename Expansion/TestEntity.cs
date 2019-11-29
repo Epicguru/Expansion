@@ -13,6 +13,8 @@ namespace Expansion
         {
             Size = new Vector2(32, 32);
             DoChunkParenting = false;
+
+            SerializeName = false;
         }
 
         public override void Update()
