@@ -75,6 +75,20 @@
     <Compile Include="MathUtils\Noise.cs" />
     <Compile Include="Packer\SpriteAtlas.cs" />
     <Compile Include="Packer\FixedSizeSpritePacker.cs" />
+    <Compile Include="Pathing\HSPQ\FastPriorityQueue.cs" />
+    <Compile Include="Pathing\HSPQ\FastPriorityQueueNode.cs" />
+    <Compile Include="Pathing\HSPQ\GenericPriorityQueue.cs" />
+    <Compile Include="Pathing\HSPQ\GenericPriorityQueueNode.cs" />
+    <Compile Include="Pathing\HSPQ\IFixedSizePriorityQueue.cs" />
+    <Compile Include="Pathing\HSPQ\IPriorityQueue.cs" />
+    <Compile Include="Pathing\HSPQ\SimplePriorityQueue.cs" />
+    <Compile Include="Pathing\HSPQ\StablePriorityQueue.cs" />
+    <Compile Include="Pathing\HSPQ\StablePriorityQueueNode.cs" />
+    <Compile Include="Pathing\PathProcessor.cs" />
+    <Compile Include="Pathing\Pathfinding.cs" />
+    <Compile Include="Pathing\PathfindingRequest.cs" />
+    <Compile Include="Pathing\PathfindingResult.cs" />
+    <Compile Include="Pathing\PNode.cs" />
     <Compile Include="Point3D.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Extensions.cs" />
@@ -699,6 +713,8 @@
     <Content Include="Content\GeonBit.UI\themes\lowres\textures\white_texture.png" />
     <Content Include="Content\GeonBit.UI\themes\lowres\ThemeData.xml" />
     <Content Include="Icon.ico" />
+    <Content Include="Pathing\HSPQ\LICENSE.txt" />
+    <Content Include="Pathing\HSPQ\_Notice.txt" />
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />

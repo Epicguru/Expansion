@@ -36,6 +36,12 @@ namespace Engine.Tiles
             return IsChunkLoaded(MakeChunkID(chunkX, chunkY));
         }
 
+        public bool IsTileWalkable(int x, int y)
+        {
+            Tile tile = GetTile(x, y, 1, false, false);
+            return tile.IsBlank;
+        }
+
         public Tile GetTile(int x, int y, int z, bool load = false, bool redrawIfLoad = false)
         {
             var cp = TileToChunkCoords(x, y);

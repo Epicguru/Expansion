@@ -11,8 +11,10 @@ namespace Engine.Threading
 
         private Queue<ThreadedRequest<In, Out>> pending = new Queue<ThreadedRequest<In, Out>>();
         protected readonly object KEY = new object();
+        protected readonly object KEY2 = new object();
         private Thread[] threads;
         private IThreadProcessor<In, Out>[] processors;
+        private Queue<Action> pendingMainThread = new Queue<Action>();
 
         public ThreadCallbackManager(int threadCount)
         {
@@ -59,6 +61,22 @@ namespace Engine.Threading
             IsRunning = false;
         }
 
+        /// <summary>
+        /// To be called from the main thread (loop thread).
+        /// </summary>
+        public void Update()
+        {
+            lock (KEY2)
+            {
+                while(pendingMainThread.Count > 0)
+                {
+                    Action a = pendingMainThread.Dequeue();
+
+                    a.Invoke();
+                }
+            }
+        }
+
         protected virtual void RunThread(object arg)
         {
             int threadIndex = (int)arg;
@@ -85,23 +103,40 @@ namespace Engine.Threading
                         }
                         catch (Exception)
                         {
-                            todo.UponProcessed?.Invoke(ThreadedRequestResult.Error, output);
-                            todo.ReturnToPool();
+                            PostResult(() =>
+                            {
+                                todo.UponProcessed?.Invoke(ThreadedRequestResult.Error, output);
+                                todo.ReturnToPool();
+                            });
                             continue;
                         }
-                        todo.UponProcessed?.Invoke(ThreadedRequestResult.Run, output);
-                        todo.ReturnToPool();
+                        PostResult(() =>
+                        {
+                            todo.UponProcessed?.Invoke(ThreadedRequestResult.Run, output);
+                            todo.ReturnToPool();
+                        });
                     }
                     else if (todo != null && todo.IsCancelled)
                     {
-                        todo.UponProcessed?.Invoke(ThreadedRequestResult.Cancelled, default(Out));
-                        todo.ReturnToPool();
+                        PostResult(() =>
+                        {
+                            todo.UponProcessed?.Invoke(ThreadedRequestResult.Cancelled, default(Out));
+                            todo.ReturnToPool();
+                        });                        
                     }
                 }
                 else
                 {
                     Thread.Sleep(IDLE_TIME);
                 }
+            }
+        }
+
+        private void PostResult(Action a)
+        {
+            lock (KEY2)
+            {
+                pendingMainThread.Enqueue(a);
             }
         }
 

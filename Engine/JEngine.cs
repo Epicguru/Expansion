@@ -2,6 +2,7 @@
 using Engine.ContentLoaders;
 using Engine.Entities;
 using Engine.Packer;
+using Engine.Pathing;
 using Engine.Screens;
 using Engine.Sprites;
 using Engine.Tiles;
@@ -30,6 +31,7 @@ namespace Engine
         public static Color BackgroundColor = Color.CornflowerBlue;
         public static ScreenManager ScreenManager { get; private set; }
         public static EntityManager Entities { get; private set; }
+        public static Pathfinding Pathfinding { get; private set; }
         public static TileLayer TileMap { get; private set; }
         public static SpriteAtlas MainAtlas { get; private set; }
         public static Sprite Pixel { get; private set; }
@@ -115,6 +117,8 @@ namespace Engine
 
             Entities = new EntityManager();
             TileMap = new TileLayer();
+            Pathfinding = new Pathfinding(4);
+            Pathfinding.Start();
 
             ScreenManager.Initialize();           
 
@@ -222,6 +226,7 @@ namespace Engine
 
             base.EndRun();
             ScreenManager.OnClose();
+            Pathfinding.Stop();
             Loop.StopAndWait();
         }
 
@@ -235,6 +240,7 @@ namespace Engine
         {
             UserInterface.Active.Update(new GameTime(TimeSpan.FromSeconds(Time.unscaledTime), TimeSpan.FromSeconds(Time.unscaledDeltaTime)));
             ScreenManager.Update();
+            Pathfinding.Update();
             Entities.UpdateAll();
         }
 

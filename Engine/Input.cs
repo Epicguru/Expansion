@@ -20,8 +20,9 @@ namespace Engine
         public static bool Enabled { get; set; } = true;
 
         public static Point MousePos { get; private set; }
+        public static Point MouseWorldTilePos { get; private set; }
         public static Vector2 MouseWorldPos { get; private set; }
-        public static bool MouseInWindow { get; private set; }
+        public static bool IsMouseInWindow { get; private set; }
         public static int MouseScroll { get; private set; }
         public static int MouseScrollDelta { get; private set; }
 
@@ -41,7 +42,9 @@ namespace Engine
 
             MousePos = CurrentMouseState.Position;
             MouseWorldPos = JEngine.Camera.ScreenToWorldPosition(MousePos.ToVector2());
-            MouseInWindow = Screen.Contains((int)MousePos.X, (int)MousePos.Y);
+            IsMouseInWindow = Screen.Contains((int)MousePos.X, (int)MousePos.Y);
+            if (JEngine.TileMap != null)
+                MouseWorldTilePos = JEngine.TileMap.PixelToTileCoords((int)MouseWorldPos.X, (int)MouseWorldPos.Y);
 
             MouseScrollDelta = CurrentMouseState.ScrollWheelValue - MouseScroll;
             MouseScroll = CurrentMouseState.ScrollWheelValue;

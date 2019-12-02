@@ -1,5 +1,6 @@
 ﻿using Engine;
 using Engine.IO;
+using Engine.Pathing;
 using Engine.Screens;
 using Engine.Sprites;
 using Engine.Threading;
@@ -46,7 +47,7 @@ namespace Expansion
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
         private TileLayer Layer { get { return JEngine.TileMap; } }
-        private TestWorkerThread Threads;
+        private bool inRequest = false;
 
         public BaseScreen() : base("Base Screen")
         {
@@ -54,16 +55,7 @@ namespace Expansion
 
         public override void Init()
         {
-            JEngine.ScreenManager.GetScreen<CameraMoveScreen>().Active = true;
-            Threads = new TestWorkerThread();
-            Threads.Start();
-
-            var req = TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 1, 2, 3, 4);
-            req.Cancel();
-            Threads.Post(req);
-            Threads.Post(TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 10, 20, 30, 40));
-            Threads.Post(TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 25, 25, 25));
-            Threads.Post(TestRequest.Create((result, output) => { Debug.Log($"[{result}: {output:F2}]"); }, 69));
+            JEngine.ScreenManager.GetScreen<CameraMoveScreen>().Active = true;            
         }
             
         public override void LoadContent(JContent contentManager)
@@ -84,6 +76,19 @@ namespace Expansion
         private List<long> toBin = new List<long>();
         public override void Update()
         {
+            if (!inRequest)
+            {
+                inRequest = true;
+                PathfindingRequest req = new PathfindingRequest(0, 0, Input.MouseWorldTilePos.X, Input.MouseWorldTilePos.Y, (state, result) =>
+                {
+                    Debug.Text($"State: {state}");
+                    Debug.Text($"Result: {result.Result}");
+                    Debug.Text($"Path length: {result.Path?.Count.ToString() ?? "null"}");
+                    inRequest = false;
+                });
+                JEngine.Pathfinding.Post(req);
+            }
+
             if (Input.KeyDown(Keys.F11))
             {
                 Screen.ToggleFullscreen();
@@ -171,7 +176,6 @@ namespace Expansion
                 missile.Position = Input.MouseWorldPos - missile.Size * 0.5f;
             }
 
-            // URGTODO make Input have a mouse world tile value.
             var p = JEngine.TileMap.PixelToTileCoords((int)Input.MouseWorldPos.X, (int)Input.MouseWorldPos.Y);
             if (Input.KeyPressed(Keys.V))
             {
@@ -303,11 +307,6 @@ namespace Expansion
         public override void DrawUI(SpriteBatch spr)
         {
             spr.Draw(JEngine.MainAtlas.Texture, new Vector2(10, 10), Color.White);
-        }
-
-        public override void OnClosing()
-        {
-            Threads.Stop();
         }
     }
 }
