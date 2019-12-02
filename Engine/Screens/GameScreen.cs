@@ -52,7 +52,8 @@ namespace Engine.Screens
 
         /// <summary>
         /// Called when the game is loading content. Use this to load any content that this screen
-        /// or related components need. Only called if the screen is registered early in startup!
+        /// or related components need. You should also build GeonBit UI here since it cannot be done in Init().
+        /// Only called if the screen is registered early in startup!
         /// Default implementation does nothing.
         /// </summary>
         /// <param name="content">The default content manager that you can load content with.</param>

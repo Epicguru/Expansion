@@ -28,6 +28,7 @@ namespace Engine.Tiles
         public TileDef Def { get { return TileDef.Get(ID); } }
         public ushort EntityID;
         public TileEntity Entity { get { return JEngine.Entities.Get(EntityID) as TileEntity; } }
+        public bool IsWalkable { get { return true; } }
 
         public Tile(byte id, byte colorRef)
         {

@@ -20,6 +20,7 @@ namespace Engine
     {
         public static string GameName { get; set; } = "Engine";
         public static JEngine Instance { get; internal set; }
+        public static int PathfindingThreadCount { get; set; } = 4;
 
         public static GameWindow GameWindow { get; private set; }
         public static GraphicsDevice MainGraphicsDevice { get; private set; }
@@ -113,11 +114,12 @@ namespace Engine
             ScreenManager.RegisterNew(new LoadingScreen()).Active = true;
             ScreenManager.RegisterNew(new DebugDisplayScreen()).Active = true;
             UponRegisterScreens?.Invoke(ScreenManager);
-            // TODO register manager screens.
 
             Entities = new EntityManager();
             TileMap = new TileLayer();
-            Pathfinding = new Pathfinding(4);
+            if (PathfindingThreadCount < 1)
+                throw new Exception($"Pathfinding thread count must be at least 1. {PathfindingThreadCount} is not a valid value.");
+            Pathfinding = new Pathfinding(PathfindingThreadCount);
             Pathfinding.Start();
 
             ScreenManager.Initialize();           
@@ -191,27 +193,31 @@ namespace Engine
             // Create a new SpriteBatch, which can be used to draw textures.
             MainSpriteBatch = new SpriteBatch(GraphicsDevice);
 
+            InitUI();
+            Debug.Log("Initialized UI engine.");
+
             // Create the main atlas packer.
             packer = new FixedSizeSpritePacker(1024, 1024, 1);
             JContent.Packer = packer;
 
-            UponLoadContent?.Invoke(JContent);
-            ScreenManager.LoadContent(JContent);
-            var pixel = new Texture2D(GraphicsDevice, 3, 3, false, SurfaceFormat.Color);
-            pixel.SetData(new Color[9] { Color.White, Color.White, Color.White, Color.White, Color.White, Color.White, Color.White, Color.White, Color.White });
+            // Create a 'pixel' texture.
+            var pixel = new Texture2D(GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
+            pixel.SetData(new Color[1] { Color.White });
             Pixel = packer.TryPack(pixel, "White Pixel");
 
+            // Load most content from the screens.
+            ScreenManager.LoadContent(JContent);
+            UponLoadContent?.Invoke(JContent);
+
+            // Pack the atlas with all those loaded sprites.
             MainAtlas = packer.CreateSpriteAtlas(true);
             JContent.Packer = null;
             packer.Dispose();
             packer = null;
-
             Debug.Log("After all screens loaded content, the main atlas has been created!");
             Debug.Log("Main Atlas: " + MainAtlas);
 
-            InitUI();
-            Debug.Log("Initialized UI engine.");
-
+            // Start the other thread, the main game loop.
             Loop.Start();
         }
 

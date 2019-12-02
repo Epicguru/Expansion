@@ -9,10 +9,11 @@ namespace Engine.Pathing
 
         }
 
-        public void Post(PathfindingRequest request)
+        public ThreadedRequest<PathfindingRequest, PathfindingResult> Post(PathfindingRequest request)
         {
             var realReq = ThreadedRequest<PathfindingRequest, PathfindingResult>.Create(request.UponProcessed, request);
             base.Post(realReq);
+            return realReq;
         }
 
         public override IThreadProcessor<PathfindingRequest, PathfindingResult> CreateProcessor(int threadIndex)

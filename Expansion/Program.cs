@@ -47,7 +47,7 @@ namespace Expansion
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
         private TileLayer Layer { get { return JEngine.TileMap; } }
-        private bool inRequest = false;
+        private Queue<List<PNode>> paths = new Queue<List<PNode>>();
 
         public BaseScreen() : base("Base Screen")
         {
@@ -76,18 +76,25 @@ namespace Expansion
         private List<long> toBin = new List<long>();
         public override void Update()
         {
-            if (!inRequest)
+            Point dest = Point.Zero;
+            //do
+            //{
+            //    dest = new Point(Rand.Range(-50, 50), Rand.Range(-50, 50));
+            //    if (JEngine.TileMap.GetTile(dest.X, dest.Y, 1).IsBlank)
+            //        break;
+            //} while (true);
+
+            dest = Input.MouseWorldTilePos;
+            PathfindingRequest req = new PathfindingRequest(0, 0, dest.X, dest.Y, (state, result) =>
             {
-                inRequest = true;
-                PathfindingRequest req = new PathfindingRequest(0, 0, Input.MouseWorldTilePos.X, Input.MouseWorldTilePos.Y, (state, result) =>
-                {
-                    Debug.Text($"State: {state}");
-                    Debug.Text($"Result: {result.Result}");
-                    Debug.Text($"Path length: {result.Path?.Count.ToString() ?? "null"}");
-                    inRequest = false;
-                });
-                JEngine.Pathfinding.Post(req);
-            }
+                Debug.Text($"State: {state}");
+                Debug.Text($"Result: {result.Result}");
+                Debug.Text($"Path length: {result.Path?.Count.ToString() ?? "null"}");
+                if(result.Path != null)
+                    paths.Enqueue(result.Path);
+            });
+            
+            JEngine.Pathfinding.Post(req);            
 
             if (Input.KeyDown(Keys.F11))
             {
@@ -301,6 +308,18 @@ namespace Expansion
 
                 chunk.FlagAsNeeded();
                 chunk.FlagAsRendered();
+            }
+
+            while(paths.Count > 0)
+            {
+                var path = paths.Dequeue();
+                Color c = Color.DarkMagenta;
+                c.A = 150;
+                foreach (var point in path)
+                {
+                    spr.Draw(JEngine.Pixel, new Rectangle(point.X * Tile.SIZE, point.Y * Tile.SIZE, Tile.SIZE, Tile.SIZE), c);
+                }
+                path = null;
             }
         }
 

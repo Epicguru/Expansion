@@ -1,5 +1,4 @@
-﻿using Engine.GUI;
-using Engine.Screens;
+﻿using Engine.Screens;
 using Engine.Tiles;
 using GeonBit.UI;
 using Microsoft.Xna.Framework;
@@ -331,7 +330,6 @@ namespace Engine
             spr.Begin(SpriteSortMode.Deferred, null, SamplerState.PointClamp, null, null, null, null);
 
             // Draw the UI.
-            UILayout.FrameReset();
             JEngine.EngineDrawUI();
             Debug.DrawUI(spr);
 

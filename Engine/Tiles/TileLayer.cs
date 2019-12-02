@@ -36,10 +36,10 @@ namespace Engine.Tiles
             return IsChunkLoaded(MakeChunkID(chunkX, chunkY));
         }
 
-        public bool IsTileWalkable(int x, int y)
+        public (bool walkable, float cost) GetWalkData(int x, int y)
         {
             Tile tile = GetTile(x, y, 1, false, false);
-            return tile.IsBlank;
+            return (true, tile.IsBlank ? 1f : 2f);
         }
 
         public Tile GetTile(int x, int y, int z, bool load = false, bool redrawIfLoad = false)

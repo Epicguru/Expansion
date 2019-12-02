@@ -65,10 +65,6 @@
     <Compile Include="IO\RLE.cs" />
     <Compile Include="JContent.cs" />
     <Compile Include="JEngine.cs" />
-    <Compile Include="GUI\UIFlow.cs" />
-    <Compile Include="GUI\UILayout.cs" />
-    <Compile Include="GUI\UIOptions.cs" />
-    <Compile Include="GUI\UIStack.cs" />
     <Compile Include="Input.cs" />
     <Compile Include="IO\GameIO.cs" />
     <Compile Include="Loop.cs" />
@@ -114,7 +110,6 @@
     <Compile Include="Tiles\TileDef.cs" />
     <Compile Include="Tiles\TileLayer.cs" />
     <Compile Include="Time.cs" />
-    <Compile Include="GUI\UI.cs" />
     <Compile Include="VSyncMode.cs" />
     <Compile Include="MathUtils\WaveUtil.cs" />
   </ItemGroup>

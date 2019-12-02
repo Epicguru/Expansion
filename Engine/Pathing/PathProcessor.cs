@@ -9,12 +9,13 @@ namespace Engine.Pathing
     public class PathProcessor : IThreadProcessor<PathfindingRequest, PathfindingResult>
     {
         public const int MAX = 1024;
-        public const float DIAGONAL_DST = 1.41421356237f;
+        public const float ROOT_2 =      1.4142135f;
+        public const float HALF_ROOT_2 = 0.5f * ROOT_2;
 
         private FastPriorityQueue<PNode> open = new FastPriorityQueue<PNode>(MAX);
         private Dictionary<PNode, PNode> cameFrom = new Dictionary<PNode, PNode>();
         private Dictionary<PNode, float> costSoFar = new Dictionary<PNode, float>();
-        private List<PNode> near = new List<PNode>();
+        private List<(PNode node, float cost)> near = new List<(PNode, float)>();
         private bool left, right, below, above;
 
         public PathProcessor()
@@ -29,12 +30,12 @@ namespace Engine.Pathing
                 path = null;
                 return PathState.ERROR_INTERNAL;
             }
-            if (!map.IsTileWalkable(startX, startY))
+            if (!map.GetWalkData(startX, startY).walkable)
             {
                 path = null;
                 return PathState.ERROR_START_NOT_WALKABLE;
             }
-            if (!map.IsTileWalkable(endX, endY))
+            if (!map.GetWalkData(endX, endY).walkable)
             {
                 path = null;
                 return PathState.ERROR_END_NOT_WALKABLE;
@@ -74,6 +75,7 @@ namespace Engine.Pathing
                 }
 
                 var current = open.Dequeue();
+                var currentCost = map.GetWalkData(current.X, current.Y).cost;
 
                 if (current.Equals(end))
                 {
@@ -88,9 +90,10 @@ namespace Engine.Pathing
 
                 // Get all neighbours (tiles that can be walked on to)
                 var neighbours = GetNear(current, map);
-                foreach (PNode n in neighbours)
+                foreach (var pair in neighbours)
                 {
-                    float newCost = costSoFar[current] + GetCost(current, n); // Note that this could change depending on speed changes per-tile.
+                    PNode n = pair.node;
+                    float newCost = costSoFar[current] + GetCost(current, pair.node, currentCost, pair.cost);
 
                     if (!costSoFar.ContainsKey(n) || newCost < costSoFar[n])
                     {
@@ -147,98 +150,109 @@ namespace Engine.Pathing
             return Math.Abs(a.X - b.X) + Math.Abs(a.Y - b.Y);
         }
 
-        private float GetCost(PNode a, PNode b)
+        private float GetCost(PNode a, PNode b, float ca, float cb)
         {
             // Only intended for neighbours.
 
             // Is directly horzontal
             if (Math.Abs(a.X - b.X) == 1 && a.Y == b.Y)
             {
-                return 1;
+                return 0.5f * ca + 0.5f * cb;
             }
 
             // Directly vertical.
             if (Math.Abs(a.Y - b.Y) == 1 && a.X == b.X)
             {
-                return 1;
+                return 0.5f * ca + 0.5f * cb;
             }
 
             // Assume that it is on one of the corners.
-            return DIAGONAL_DST;
+            return HALF_ROOT_2 * ca + HALF_ROOT_2 * cb;
         }
 
-        private List<PNode> GetNear(PNode node, TileLayer map)
+        private List<(PNode node, float cost)> GetNear(PNode node, TileLayer map)
         {
             // Want to add nodes connected to the center node, if they are walkable.
             // This code stops the pathfinder from cutting corners, and going through walls that are diagonal from each other.
 
             near.Clear();
+            (bool walkable, float cost) data;
+            int x = node.X;
+            int y = node.Y;
 
             // Left
             left = false;
-            if (map.IsTileWalkable(node.X - 1, node.Y))
+            data = map.GetWalkData(x - 1, y);
+            if (data.walkable)
             {
-                near.Add(new PNode(node.X - 1, node.Y));
+                near.Add((new PNode(node.X - 1, node.Y), data.cost));
                 left = true;
             }
 
             // Right
             right = false;
-            if (map.IsTileWalkable(node.X + 1, node.Y))
+            data = map.GetWalkData(x + 1, y);
+            if (data.walkable)
             {
-                near.Add(new PNode(node.X + 1, node.Y));
+                near.Add((new PNode(node.X + 1, node.Y), data.cost));
                 right = true;
             }
 
             // Above
             above = false;
-            if (map.IsTileWalkable(node.X, node.Y + 1))
+            data = map.GetWalkData(x, y + 1);
+            if (data.walkable)
             {
-                near.Add(new PNode(node.X, node.Y + 1));
+                near.Add((new PNode(node.X, node.Y + 1), data.cost));
                 above = true;
             }
 
             // Below
             below = false;
-            if (map.IsTileWalkable(node.X, node.Y - 1))
+            data = map.GetWalkData(x, y - 1);
+            if (data.walkable)
             {
-                near.Add(new PNode(node.X, node.Y - 1));
+                near.Add((new PNode(node.X, node.Y - 1), data.cost));
                 below = true;
             }
 
             // Above-Left
             if (left && above)
             {
-                if (map.IsTileWalkable(node.X - 1, node.Y + 1))
+                data = map.GetWalkData(x - 1, y + 1);
+                if (data.walkable)
                 {
-                    near.Add(new PNode(node.X - 1, node.Y + 1));
+                    near.Add((new PNode(node.X - 1, node.Y + 1), data.cost));
                 }
             }
 
             // Above-Right
             if (right && above)
             {
-                if (map.IsTileWalkable(node.X + 1, node.Y + 1))
+                data = map.GetWalkData(x + 1, y + 1);
+                if (data.walkable)
                 {
-                    near.Add(new PNode(node.X + 1, node.Y + 1));
+                    near.Add((new PNode(node.X + 1, node.Y + 1), data.cost));
                 }
             }
 
             // Below-Left
             if (left && below)
             {
-                if (map.IsTileWalkable(node.X - 1, node.Y - 1))
+                data = map.GetWalkData(x - 1, y - 1);
+                if (data.walkable)
                 {
-                    near.Add(new PNode(node.X - 1, node.Y - 1));
+                    near.Add((new PNode(node.X - 1, node.Y - 1), data.cost));
                 }
             }
 
             // Below-Right
             if (right && below)
             {
-                if (map.IsTileWalkable(node.X + 1, node.Y - 1))
+                data = map.GetWalkData(x + 1, y - 1);
+                if (data.walkable)
                 {
-                    near.Add(new PNode(node.X + 1, node.Y - 1));
+                    near.Add((new PNode(node.X + 1, node.Y - 1), data.cost));
                 }
             }
 
