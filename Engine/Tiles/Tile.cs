@@ -28,13 +28,22 @@ namespace Engine.Tiles
         public TileDef Def { get { return TileDef.Get(ID); } }
         public ushort EntityID;
         public TileEntity Entity { get { return JEngine.Entities.Get(EntityID) as TileEntity; } }
-        public bool IsWalkable { get { return true; } }
 
         public Tile(byte id, byte colorRef)
         {
             this.ID = id;
             this.ColorRef = colorRef;
             this.EntityID = 0;
+        }
+
+        public bool IsWalkable(int worldX, int worldY)
+        {
+            return ID == 0 ? true : Def.IsWalkable(this, worldX, worldY);
+        }
+
+        public float GetWalkCost(int worldX, int worldY)
+        {
+            return ID == 0 ? 1f : Def.GetWalkCost(this, worldX, worldY);
         }
 
         public void Draw(SpriteBatch spr, Chunk chunk, int localX, int localY, int z)

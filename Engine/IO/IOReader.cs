@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Items;
+using Microsoft.Xna.Framework;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -72,6 +73,14 @@ namespace Engine.IO
         public Bounds ReadBounds()
         {
             return new Bounds(this.ReadVector2(), this.ReadVector2());
+        }
+
+        public ItemStack ReadItemStack()
+        {
+            ushort id = ReadUInt16();
+            int count = ReadInt32();
+
+            return new ItemStack(id, count);
         }
     }
 }

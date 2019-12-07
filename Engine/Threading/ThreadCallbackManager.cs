@@ -11,6 +11,7 @@ namespace Engine.Threading
         public bool IsRunning { get; private set; }
         public readonly ThreadStats[] Statistics;
         public int PendingCount { get { return pending.Count; } }
+        public int ProcessedLastSecond { get; private set; }
 
         public struct ThreadStats
         {
@@ -113,6 +114,7 @@ namespace Engine.Threading
             }
         }
 
+        private int _processedIncrement;
         private Queue<ThreadedRequest<In, Out>> pending = new Queue<ThreadedRequest<In, Out>>();
         protected readonly object KEY = new object();
         protected readonly object KEY2 = new object();
@@ -188,6 +190,10 @@ namespace Engine.Threading
             if(timer >= 1f)
             {
                 timer = 0f;
+
+                ProcessedLastSecond = _processedIncrement;
+                _processedIncrement = 0;
+
                 for (int i = 0; i < Statistics.Length; i++)
                 {
                     var s = Statistics[i];
@@ -206,7 +212,7 @@ namespace Engine.Threading
             IThreadProcessor<In, Out> processor = processors[threadIndex];
             Stopwatch watch = new Stopwatch();
 
-            const int IDLE_TIME = 1;
+            const int IDLE_TIME = 5;
             while (IsRunning)
             {
                 if(pending.Count > 0)
@@ -221,6 +227,7 @@ namespace Engine.Threading
                     if(todo != null && !todo.IsCancelled)
                     {
                         Statistics[threadIndex].CumulativeProcessed++;
+                        _processedIncrement++;
                         watch.Start();
                         Out output = default(Out);
                         try

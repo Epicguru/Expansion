@@ -36,6 +36,7 @@ namespace Engine
         public static TileLayer TileMap { get; private set; }
         public static SpriteAtlas MainAtlas { get; private set; }
         public static Sprite Pixel { get; private set; }
+        public static Sprite MissingTextureSprite { get; private set; }
 
         public static Action<JContent> UponRegisterContentLoaders;
         public static Action<ScreenManager> UponRegisterScreens;
@@ -204,6 +205,7 @@ namespace Engine
             var pixel = new Texture2D(GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             pixel.SetData(new Color[1] { Color.White });
             Pixel = packer.TryPack(pixel, "White Pixel");
+            MissingTextureSprite = JContent.Load<Sprite>("Missing");
 
             // Load most content from the screens.
             ScreenManager.LoadContent(JContent);

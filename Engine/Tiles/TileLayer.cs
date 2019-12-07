@@ -39,7 +39,7 @@ namespace Engine.Tiles
         public (bool walkable, float cost) GetWalkData(int x, int y)
         {
             Tile tile = GetTile(x, y, 1, false, false);
-            return (true, tile.IsBlank ? 1f : 2f);
+            return (tile.IsWalkable(x, y), tile.GetWalkCost(x, y));
         }
 
         public Tile GetTile(int x, int y, int z, bool load = false, bool redrawIfLoad = false)

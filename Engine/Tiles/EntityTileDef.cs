@@ -29,7 +29,6 @@ namespace Engine.Tiles
         {
             // Remove corresponding entity.
             // Not necessary in unload since all tile entities are automatically saved and loaded later.
-            // TODO save and load tile entities.
             if (fromUnload)
                 return;
 

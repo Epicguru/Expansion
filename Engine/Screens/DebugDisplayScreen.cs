@@ -23,13 +23,21 @@ namespace Engine.Screens
 
         public override void LoadContent(JContent content)
         {
-            MainPanel = new Panel(new Vector2(400, 300), PanelSkin.Simple, Anchor.BottomRight, new Vector2(10, 10));
+            MainPanel = new Panel(new Vector2(400, 320), PanelSkin.Simple, Anchor.BottomRight, new Vector2(10, 10));
             MainPanel.Draggable = true;
             PanelTabs tabs = new PanelTabs(PanelSkin.None);
             MainPanel.AddChild(tabs);
             var threadTab = tabs.AddTab("Pathing");
             threadTab.button.MaxSize = new Vector2(500, 32);
             var threadPanel = threadTab.panel;
+            threadPanel.AddChild(new CheckBox("Draw Paths")
+            {
+                OnValueChange = (e) =>
+                {
+                    JEngine.Entities.DrawPathfindingDebug = (e as CheckBox).Checked;
+                },
+                Checked = false
+            });
             threadPanel.AddChild(ThreadPendingLabel = new Label("Pending: 0"));
             threadPanel.AdjustHeightAutomatically = true;
             ThreadLabels = new Paragraph[JEngine.PathfindingThreadCount];
@@ -48,7 +56,9 @@ namespace Engine.Screens
             if (Input.KeyDown(Keys.F1))
                 Visible = !Visible;
 
-            ThreadPendingLabel.Text = $"Pending: {JEngine.Pathfinding.PendingCount}";
+            MainPanel.Visible = Visible;
+
+            ThreadPendingLabel.Text = $"Pending: {JEngine.Pathfinding.PendingCount}, Req. per second: {JEngine.Pathfinding.ProcessedLastSecond}";
             var stats = JEngine.Pathfinding.Statistics;
             for (int i = 0; i < stats.Length; i++)
             {

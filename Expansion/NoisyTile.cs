@@ -10,5 +10,10 @@ namespace Expansion
         {
             base.BaseSprite = spr;
         }
+
+        public override bool IsWalkable(Tile tile, int worldX, int worldY)
+        {
+            return true;
+        }
     }
 }

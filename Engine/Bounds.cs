@@ -61,5 +61,10 @@ namespace Engine
         {
             return new Rectangle(new Point((int)Math.Round(Pos.X), (int)Math.Round(Pos.Y)), new Point((int)Math.Ceiling(Size.X), (int)Math.Ceiling(Size.Y)));
         }
+
+        public override string ToString()
+        {
+            return $"({Pos.X:F1}, {Pos.Y:F1}, {Size.X:F1}, {Size.Y:F1})";
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Engine;
 using Engine.IO;
+using Engine.Items;
 using Engine.Pathing;
 using Engine.Screens;
 using Engine.Sprites;
@@ -42,7 +43,7 @@ namespace Expansion
     {
         public const float CHUNK_UNLOAD_TIME = 0.1f;
 
-        internal static Sprite TreeLines, TreeColor;
+        internal static Sprite TreeLines, TreeColor, Character, IconWood;
         public static Sprite MissileSprite;
         private Sprite NoiseTileSprite;
         private TileDef NoiseTileDef;
@@ -64,6 +65,8 @@ namespace Expansion
             TreeColor = contentManager.Load<Sprite>("NewTreeColor");
             NoiseTileSprite = contentManager.Load<Sprite>("TileNoise");
             MissileSprite = contentManager.Load<Sprite>("Missile");
+            Character = contentManager.Load<Sprite>("Character");
+            IconWood = contentManager.Load<Sprite>("Wood Icon");
 
             NoiseTileDef = new TileDef(1, "Test Tile");
             NoiseTileDef.BaseSprite = NoiseTileSprite;
@@ -71,31 +74,13 @@ namespace Expansion
             TileDef.Register(new TestLinkedTile());
             TileDef.Register(new TreeTile());
             TileDef.Register(new WindTurbineTileDef());
+
+            ItemDef.Register(new WoodItem());
         }
 
         private List<long> toBin = new List<long>();
         public override void Update()
         {
-            Point dest = Point.Zero;
-            //do
-            //{
-            //    dest = new Point(Rand.Range(-50, 50), Rand.Range(-50, 50));
-            //    if (JEngine.TileMap.GetTile(dest.X, dest.Y, 1).IsBlank)
-            //        break;
-            //} while (true);
-
-            dest = Input.MouseWorldTilePos;
-            PathfindingRequest req = new PathfindingRequest(0, 0, dest.X, dest.Y, (state, result) =>
-            {
-                Debug.Text($"State: {state}");
-                Debug.Text($"Result: {result.Result}");
-                Debug.Text($"Path length: {result.Path?.Count.ToString() ?? "null"}");
-                if(result.Path != null)
-                    paths.Enqueue(result.Path);
-            });
-            
-            JEngine.Pathfinding.Post(req);            
-
             if (Input.KeyDown(Keys.F11))
             {
                 Screen.ToggleFullscreen();
@@ -159,10 +144,11 @@ namespace Expansion
                 }
             }
 
-            if (Input.KeyPressed(Keys.Y))
+            if (Input.KeyDown(Keys.Y))
             {
                 var e = new TestActive();
                 e.Center = Input.MouseWorldPos;
+                e.Velocity = Rand.UnitCircle() * Rand.Range(1f, 5f);
             }
 
             if (Input.KeyPressed(Keys.L))
@@ -193,9 +179,6 @@ namespace Expansion
             {
                 Layer.SetTile(p.X, p.Y, 1, new Tile(4, ColorCache.EnsureColor(Color.White)));
             }
-
-            if (Input.KeyPressed(Keys.C))
-                return;
 
             const int MAX_PER_FRAME = 5;
             int count = 0;
@@ -325,7 +308,7 @@ namespace Expansion
 
         public override void DrawUI(SpriteBatch spr)
         {
-            spr.Draw(JEngine.MainAtlas.Texture, new Vector2(10, 10), Color.White);
+            //spr.Draw(JEngine.MainAtlas.Texture, new Vector2(10, 10), Color.White);
         }
     }
 }

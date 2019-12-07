@@ -57,6 +57,7 @@
     <Compile Include="TreeTile.cs" />
     <Compile Include="WindTurbine.cs" />
     <Compile Include="WindTurbineTileDef.cs" />
+    <Compile Include="WoodItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="DataTypes, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">

@@ -57,6 +57,16 @@ namespace Engine.Tiles
             this.Name = name;
         }
 
+        public virtual bool IsWalkable(Tile tile, int worldX, int worldY)
+        {
+            return false;
+        }
+
+        public virtual float GetWalkCost(Tile tile, int worldX, int worldY)
+        {
+            return 1f;
+        }
+
         public virtual void Draw(SpriteBatch spr, Tile tile, Chunk chunk, int localX, int localY, int z)
         {
             if(BaseSprite != null)

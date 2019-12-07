@@ -27,5 +27,15 @@ namespace Expansion
             spr.Draw(treeSprite, new Vector2(x, y), Color.White, 0f, new Vector2(treeSprite.Width / 2, treeSprite.Height), SpriteEffects.None, 0f);
             spr.Draw(treeSprite2, new Vector2(x, y), Color.DarkOliveGreen, 0f, new Vector2(treeSprite.Width / 2, treeSprite.Height), SpriteEffects.None, 0f);
         }
+
+        public override bool IsWalkable(Tile tile, int worldX, int worldY)
+        {
+            return true;
+        }
+
+        public override float GetWalkCost(Tile tile, int worldX, int worldY)
+        {
+            return 4f;
+        }
     }
 }

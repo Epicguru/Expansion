@@ -16,9 +16,10 @@ namespace Engine
         // async to reduce memory consumption from having all these strings lying around.
 
         public static bool LogEnabled { get; set; } = true;
-        public static uint LogStackTraceDepth { get; set; } = 3;
+        public static bool LogCallingMethod { get; set; } = true;
         public static bool LogEnableTrace { get; set; } = true;
         public static bool LogEnableSave { get; set; } = true;
+        public static bool Highlight { get; set; } = false;
 
         public static bool LogPrintLevel { get; set; } = true;
         public static bool LogPrintTime { get; set; } = false;
@@ -323,6 +324,8 @@ namespace Engine
             if (!LogEnabled)
                 return;
 
+            string stack = Environment.StackTrace;
+
             string lvl = null;
             switch (level)
             {
@@ -354,24 +357,53 @@ namespace Engine
             TextBuilder.Append(text ?? "<null>");
             StringBuilder.Append(text ?? "<null>");
 
-            if(LogStackTraceDepth != 0)
-            {
-                string stack = Environment.StackTrace;
-                StringBuilder.AppendLine();
-                StringBuilder.Append(stack);
-            }
+            StringBuilder.AppendLine();
+            StringBuilder.Append(stack);            
 
             if(level != LogLevel.TRACE || (LogEnableTrace))
             {
                 if (Console.ForegroundColor != colour)
                     Console.ForegroundColor = colour;
+                if (Highlight)
+                {
+                    switch (level)
+                    {
+                        case LogLevel.INFO:
+                            Console.BackgroundColor = ConsoleColor.DarkCyan;
+                            break;
+                        case LogLevel.WARN:
+                            Console.BackgroundColor = ConsoleColor.DarkYellow;
+                            break;
+                        case LogLevel.ERROR:
+                            Console.BackgroundColor = ConsoleColor.DarkRed;
+                            break;
+                    }
+                }
+                else
+                {
+                    Console.BackgroundColor = ConsoleColor.Black;
+                }
 
                 Console.WriteLine(TextBuilder.ToString());
+                Console.BackgroundColor = ConsoleColor.Black;
             }
 
             LogEntries.Add(StringBuilder.ToString());
             StringBuilder.Clear();
             TextBuilder.Clear();
+
+            if (LogCallingMethod)
+            {
+                string[] split = stack.Split('\n');
+                string interesting = split[4];
+                string[] inSplit = interesting.Split('(');
+                string methodName = inSplit[0].Substring(6);
+                string fullPath = interesting.Substring(interesting.LastIndexOf(')'));
+                fullPath = fullPath.Substring(fullPath.LastIndexOf('\\') + 1);
+
+                Console.ForegroundColor = ConsoleColor.DarkCyan;
+                Console.WriteLine($"   from [{methodName.Trim()} -> {fullPath.Trim()}]");
+            }            
         }
 
         #endregion

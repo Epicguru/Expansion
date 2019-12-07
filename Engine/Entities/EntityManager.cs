@@ -12,6 +12,7 @@ namespace Engine.Entities
     {
         public int EntityCount { get; private set; }
         public int MaxEntityCount { get { return entities.Length - 1; } }
+        public bool DrawPathfindingDebug { get; set; } = false;
 
         private List<Entity> allEntities = new List<Entity>();
         private Queue<Entity> toAdd = new Queue<Entity>();
@@ -84,6 +85,7 @@ namespace Engine.Entities
             EntityCount++;
             allEntities.Add(e);
             entities[newIndex] = e;
+            e.InternalOnRegistered();
 
             return e.ID;
         }
@@ -160,11 +162,9 @@ namespace Engine.Entities
             {
                 var e = allEntities[i];
                 if (e.RemovePending)                
-                    continue;                
+                    continue;       
 
-                                              
-
-                e.Update();
+                e.InternalUpdate();
             }
 
             foreach (var chunk in JEngine.TileMap.GetLoadedChunks())
@@ -214,6 +214,15 @@ namespace Engine.Entities
                 }
 
                 e.Draw(spr);
+
+                if (DrawPathfindingDebug)
+                {
+                    if(e is ActiveEntity)
+                    {
+                        var e2 = (ActiveEntity)e;
+                        e2.DrawDebugPath(spr);
+                    }
+                }
             }
         }
 

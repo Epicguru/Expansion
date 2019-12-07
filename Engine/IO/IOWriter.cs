@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Engine.Items;
+using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using System.IO;
 
@@ -79,6 +80,12 @@ namespace Engine.IO
             this.Write(point3D.X);
             this.Write(point3D.Y);
             this.Write(point3D.Z);
+        }
+
+        public void Write(ItemStack itemStack)
+        {
+            Write(itemStack.ItemID);
+            Write(itemStack.Count);
         }
 
     }

@@ -5,6 +5,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
@@ -123,6 +125,7 @@ namespace Engine
         }
         public static Stats Statistics { get; private set; } = new Stats();
 
+        private static Queue<Action<SpriteBatch>> pendingDraw = new Queue<Action<SpriteBatch>>();
         private static float _targetFramerate = 0;
         private static double _precisionWait = 0.5;
         private static int cumulativeFrames;
@@ -133,6 +136,12 @@ namespace Engine
         {
             // Remember physics: f=1/i  so  i=1/f
             return 1.0 / TargetFramerate;
+        }
+
+        public static void AddDrawAction(Action<SpriteBatch> toDraw)
+        {
+            if(toDraw != null)
+                pendingDraw.Enqueue(toDraw);
         }
 
         public static void Start()
@@ -322,6 +331,7 @@ namespace Engine
 
             // Draw the world.
             JEngine.EngineDraw();
+            DrawPending(spr);
             Debug.Draw(spr);
 
             spr.End();
@@ -342,6 +352,16 @@ namespace Engine
 
             Statistics.RenderTargetDraws = GameScreen.RTDrawCount;
             GameScreen.RTDrawCount = 0;
+        }
+
+        private static void DrawPending(SpriteBatch spr)
+        {
+            while(pendingDraw.Count > 0)
+            {
+                var toDo = pendingDraw.Dequeue();
+                if (toDo != null)
+                    toDo.Invoke(spr);
+            }
         }
 
         private static void Present()
